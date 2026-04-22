@@ -140,12 +140,15 @@ def load_mmunetvae(checkpoint_path: Path, device: str = "cuda"):
     """
     import torch
 
-    # These are the most likely import paths based on the FOMO25 repo layout;
-    # adjust once verified against the installed image.
+    # Confirmed via jbanusco/fomo25 repo inspection 2026-04-22: the module
+    # lives at src/models/networks/mmunetvae.py. Inside the docker image the
+    # `src/` dir is expected to be on PYTHONPATH (Dockerfile adds it), so
+    # `models.networks.mmunetvae` is the canonical import. A few fallbacks
+    # are kept in case layout differs in the image.
     candidates = [
-        "fomo25.models.mmunetvae",
-        "ssl3d.models.mmunetvae",
-        "yucca.modules.networks.mmunetvae",
+        "models.networks.mmunetvae",
+        "src.models.networks.mmunetvae",
+        "fomo25.models.networks.mmunetvae",
     ]
     module = None
     for name in candidates:
@@ -161,12 +164,19 @@ def load_mmunetvae(checkpoint_path: Path, device: str = "cuda"):
         )
 
     ckpt = torch.load(checkpoint_path, map_location="cpu")
+    # fomo25 checkpoints are LightningModule-style; state_dict is keyed with
+    # the module prefix. Strip it so we can load into the bare nn.Module.
     state = ckpt.get("state_dict", ckpt)
-    model_cls = getattr(module, "MultiModalUNetVAE", None) or getattr(
-        module, "mmunetvae"
-    )
+    state = {k.split("model.", 1)[-1]: v for k, v in state.items()}
+
+    model_cls = module.MultiModalUNetVAE
     model = model_cls()
-    model.load_state_dict(state, strict=False)
+    missing, unexpected = model.load_state_dict(state, strict=False)
+    if missing or unexpected:
+        print(
+            f"load_state_dict: missing={len(missing)} unexpected={len(unexpected)}",
+            file=sys.stderr,
+        )
     model.eval().to(device)
     return model
 
