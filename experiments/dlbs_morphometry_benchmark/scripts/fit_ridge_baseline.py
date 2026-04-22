@@ -137,7 +137,36 @@ def main() -> None:
         help='Region whose volume_mm3 is treated as ICV (FS: total intracranial; T1Prep: TIV)',
     )
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument(
+        "--wandb-project",
+        default=None,
+        help='W&B project name. If set, logs metrics per bias-correction scheme. '
+             'Run "wandb login" first. Example: dlbs-morphometry-benchmark',
+    )
+    ap.add_argument("--wandb-entity", default=None)
+    ap.add_argument("--wandb-run-name", default=None)
     args = ap.parse_args()
+
+    wb = None
+    if args.wandb_project:
+        try:
+            import wandb
+            wb = wandb.init(
+                project=args.wandb_project,
+                entity=args.wandb_entity,
+                name=args.wandb_run_name
+                or f"{args.tool}-{'icv' if args.normalise_by_icv else 'raw'}",
+                config={
+                    "tool": args.tool,
+                    "value_col": args.value_col,
+                    "features_parquet": str(args.features),
+                    "normalise_by_icv": args.normalise_by_icv,
+                },
+                tags=["ridge", "morphometry", "dlbs", args.tool],
+                reinit=True,
+            )
+        except Exception as e:
+            print(f"wandb init failed: {e}; continuing without tracking", file=sys.stderr)
 
     features = pd.read_parquet(args.features)
     wide = long_to_wide(features, args.tool, args.value_col)
@@ -197,6 +226,28 @@ def main() -> None:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(results, indent=2))
     print(json.dumps(results, indent=2))
+
+    if wb is not None:
+        # Flatten correction-scheme metrics for wandb's key-value logger
+        flat = {
+            f"{scheme}/{k}": v
+            for scheme in ("raw", "cole", "beheshti", "zhang")
+            for k, v in results[scheme].items()
+        }
+        flat.update(
+            n_scans=results["n_scans"],
+            n_subjects=results["n_subjects"],
+            n_features=results["n_features"],
+        )
+        wb.log(flat)
+        wb.summary.update(flat)
+        try:
+            import wandb  # noqa: F401
+
+            wb.save(str(args.out))
+        except Exception:
+            pass
+        wb.finish()
 
 
 if __name__ == "__main__":
