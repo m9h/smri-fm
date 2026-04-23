@@ -24,12 +24,17 @@ _version.py
 
 # Local data directories
 **/data
+/DLBS/
+/BrainIAC/
 
 # Local scratch/tmp
 .scratch
 tmp
 .tmp*
 
-#AI assistants
+# AI assistants
 .claude/
 .codex
+
+# uv (too many conflicts)
+uv.lock
