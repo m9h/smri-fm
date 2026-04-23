@@ -12,7 +12,8 @@
 # Assumptions:
 #   - Raw data at /data/raw/openneuro/<dataset>/<subject>/ses-*/anat/*_T1w.nii.gz
 #   - Output root /data/datasets/smri-fm-cmp/<tool>/<dataset>/<subject>_<session>
-#   - fastsurfer-grace and t1prep-grace images built locally
+#   - fastsurfer-arm and t1prep-arm images built locally
+#     (published at ghcr.io/m9h/{fastsurfer,t1prep}-arm:latest)
 #   - FreeSurfer license at ~/license.txt; FastSurfer checkpoints at ~/fs_checkpoints
 set -euo pipefail
 
@@ -44,8 +45,12 @@ LOG="/home/mhough/dev/T1Prep/comparison/logs/smoke_${SUBJECT}.log"
   echo "=== smoke_all_subject ${DATASET} ${SUBJECT} start $(date -Iseconds) ==="
 
   # Discover T1s across all sessions (MPRAGE preferred; run-1 first if multiple)
-  mapfile -t T1S < <(find "${ROOT_IN}" -name "${SUBJECT}_ses-wave*_acq-MPRAGE_*T1w.nii.gz" | sort)
+  mapfile -t T1S < <(find "${ROOT_IN}" -name "${SUBJECT}_ses-wave*_acq-MPRAGE_*T1w.nii.gz" 2>/dev/null | sort)
   echo "found ${#T1S[@]} T1s"
+  if (( ${#T1S[@]} == 0 )); then
+    echo "ERROR: no T1s found under ${ROOT_IN} — is the subject synced?"
+    exit 2
+  fi
 
   # FastSurfer seg_only per session
   for T1 in "${T1S[@]}"; do
@@ -60,7 +65,7 @@ LOG="/home/mhough/dev/T1Prep/comparison/logs/smoke_${SUBJECT}.log"
       -v "${ROOT_FS}:/output" \
       -v "${HOME}/license.txt:/opt/FastSurfer/license.txt:ro" \
       -v "${HOME}/fs_checkpoints:/opt/FastSurfer/checkpoints:ro" \
-      fastsurfer-grace:latest \
+      fastsurfer-arm:latest \
       ./run_fastsurfer.sh \
         --t1 "/data/${T1_BASE}" --sid "${SID}" --sd /output \
         --seg_only --parallel \
@@ -80,7 +85,7 @@ LOG="/home/mhough/dev/T1Prep/comparison/logs/smoke_${SUBJECT}.log"
       --user "$(id -u):$(id -g)" \
       -v "${ANAT_DIR}:/input:ro" \
       -v "${OUT}:/output" \
-      t1prep-grace:latest \
+      t1prep-arm:latest \
         --out-dir /output --gz "/input/${T1_BASE}" 2>&1 | tail -3
   done
 
@@ -97,7 +102,7 @@ LOG="/home/mhough/dev/T1Prep/comparison/logs/smoke_${SUBJECT}.log"
       --entrypoint /opt/T1Prep/scripts/process_longitudinal.sh \
       -v "${ROOT_IN}:/input:ro" \
       -v "${ROOT_T1L}:/output" \
-      t1prep-grace:latest \
+      t1prep-arm:latest \
       --out-dir /output --t1prep-arg "--gz" "${CPATHS[@]}" 2>&1 | tail -10
   fi
 

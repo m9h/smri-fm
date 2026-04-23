@@ -62,7 +62,7 @@ rm -rf "$SCRATCH" && mkdir -p "$SCRATCH" "$OUT_ROOT"
     --entrypoint /opt/T1Prep/env/bin/python \
     -e PYTHONPATH=/opt/T1Prep/src \
     -v "${SCRATCH}:/scratch" \
-    t1prep-grace:latest \
+    t1prep-arm:latest \
     -m t1prep.realign_longitudinal \
       --inputs "${CPATHS[@]}" \
       --out-dir /scratch \
@@ -90,7 +90,7 @@ rm -rf "$SCRATCH" && mkdir -p "$SCRATCH" "$OUT_ROOT"
       --user "$(id -u):$(id -g)" \
       -v "${ANAT_DIR}:/input:ro" \
       -v "${OUT_XS_ROOT}/${FIRST_SID}:/output" \
-      t1prep-grace:latest \
+      t1prep-arm:latest \
         --out-dir /output --gz "/input/${FIRST_B}" 2>&1 | tail -3
   else
     echo ">>> reusing cross-sectional wave-1 surface at ${XS_SURF_DIR}"
