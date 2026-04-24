@@ -1,0 +1,55 @@
+{
+  "feature_sources": [
+    {
+      "parquet": "results/fastsurfer_features.parquet",
+      "tool": "aseg+DKT.VINN",
+      "value_col": "volume_mm3",
+      "tag": "aseg_DKT_VINN",
+      "n_features": 100,
+      "n_scans_in_source": 60
+    },
+    {
+      "parquet": "results/t1prep_features.parquet",
+      "tool": "t1prep_thickness",
+      "value_col": "thickness_mm",
+      "tag": "t1prep_thickness",
+      "n_features": 71,
+      "n_scans_in_source": 60
+    }
+  ],
+  "n_features": 171,
+  "n_scans": 60,
+  "n_subjects": 23,
+  "raw": {
+    "mae": 6.568411156137711,
+    "rmse": 8.03893631543202,
+    "r2": 0.8359297355596534,
+    "pearson_r": 0.9144324576327644,
+    "bias": -0.23877385545088192,
+    "n": 60
+  },
+  "cole": {
+    "mae": 7.458366706348058,
+    "rmse": 8.784288079090771,
+    "r2": 0.8040948551401379,
+    "pearson_r": 0.9144324576327635,
+    "bias": 1.7526720815415805e-14,
+    "n": 60
+  },
+  "beheshti": {
+    "mae": 6.164332579866472,
+    "rmse": 7.260205260594617,
+    "r2": 0.8661770805255391,
+    "pearson_r": 0.9391336114118558,
+    "bias": -1.1842378929335003e-16,
+    "n": 60
+  },
+  "zhang": {
+    "mae": 6.169702547091445,
+    "rmse": 7.238934505379527,
+    "r2": 0.8669600734683465,
+    "pearson_r": 0.9363613691241051,
+    "bias": -0.27558096023728135,
+    "n": 60
+  }
+}
