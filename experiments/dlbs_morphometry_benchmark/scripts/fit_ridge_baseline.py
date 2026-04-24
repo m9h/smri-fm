@@ -29,6 +29,8 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import LeaveOneGroupOut
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 
 def wave_to_age_col() -> dict[str, str]:
@@ -198,16 +200,24 @@ def main() -> None:
     inds = np.where(np.isnan(X))
     X[inds] = np.take(col_med, inds[1])
 
-    # LOSO ridge — skip if only one group
+    # LOSO ridge — skip if only one group. StandardScaler+Ridge pipeline:
+    # with mixed feature scales inside a single rung (volumes in mm³, etc.)
+    # an unscaled ridge silently down-weights small-magnitude features.
+    def _mk_ridge():
+        return Pipeline([
+            ("scaler", StandardScaler()),
+            ("ridge", RidgeCV(alphas=np.logspace(-3, 3, 25))),
+        ])
+
     preds = np.zeros_like(y)
     if df["subject"].nunique() >= 2:
         logo = LeaveOneGroupOut()
         for tr, te in logo.split(X, y, groups):
-            model = RidgeCV(alphas=np.logspace(-3, 3, 25))
+            model = _mk_ridge()
             model.fit(X[tr], y[tr])
             preds[te] = model.predict(X[te])
     else:
-        model = RidgeCV(alphas=np.logspace(-3, 3, 25))
+        model = _mk_ridge()
         model.fit(X, y)
         preds = model.predict(X)
 

@@ -54,12 +54,35 @@ def parse_entities(pat_id: str) -> dict[str, str]:
 
 
 def load_brainiac(brainiac_src: Path):
+    """Import the BrainIAC Python modules from an on-disk checkout."""
     if not (brainiac_src / "model.py").exists():
         raise SystemExit(f"Expected BrainIAC src at {brainiac_src}")
     sys.path.insert(0, str(brainiac_src))
-    from dataset import BrainAgeDataset, get_validation_transform  # type: ignore
+    from dataset import get_validation_transform  # type: ignore
     from model import ViTBackboneNet  # type: ignore
-    return BrainAgeDataset, get_validation_transform, ViTBackboneNet
+    return get_validation_transform, ViTBackboneNet
+
+
+class ExtractionDataset(torch.utils.data.Dataset):
+    """Minimal Dataset that yields (image, pat_id) — we don't need labels
+    here and BrainIAC's upstream BrainAgeDataset strips pat_id from its
+    __getitem__ output, so we roll our own with the same transform chain.
+    """
+
+    def __init__(self, df, root_dir, transform):
+        self.df = df.reset_index(drop=True)
+        self.root_dir = Path(root_dir)
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, idx):
+        pat_id = str(self.df.loc[idx, "pat_id"])
+        img_path = str(self.root_dir / f"{pat_id}.nii.gz")
+        sample = {"image": img_path}
+        sample = self.transform(sample)
+        return {"image": sample["image"], "pat_id": pat_id}
 
 
 def main() -> None:
@@ -83,9 +106,7 @@ def main() -> None:
     )
     print(f"device: {device}")
 
-    BrainAgeDataset, get_validation_transform, ViTBackboneNet = (
-        load_brainiac(args.brainiac_src)
-    )
+    get_validation_transform, ViTBackboneNet = load_brainiac(args.brainiac_src)
 
     # Load the pretrained backbone (NO fine-tuned classifier head)
     print(f"loading backbone from {args.simclr_checkpoint}")
@@ -94,11 +115,11 @@ def main() -> None:
 
     # Reuse Nima's dataset + transform exactly so preprocessing matches her
     # brain-age inference runs.
-    df = pd.read_csv(args.input_csv)
+    df = pd.read_csv(args.input_csv, dtype={"pat_id": str})
     transform = get_validation_transform()
-    dataset = BrainAgeDataset(
+    dataset = ExtractionDataset(
         df=df,
-        root_dir=str(args.root_dir),
+        root_dir=args.root_dir,
         transform=transform,
     )
     loader = DataLoader(
