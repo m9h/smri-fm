@@ -31,7 +31,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import RidgeCV
-from sklearn.model_selection import LeaveOneGroupOut
+from sklearn.model_selection import GroupKFold, LeaveOneGroupOut
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -83,6 +83,12 @@ def main() -> None:
         "--participants",
         type=Path,
         default=Path("/data/raw/openneuro/ds004856/participants.tsv"),
+    )
+    ap.add_argument(
+        "--cv-mode",
+        choices=["loso", "groupkfold5"],
+        default="groupkfold5",
+        help='Match MedARC smri-fm synthseg_ridge_baseline default = groupkfold5.',
     )
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument(
@@ -140,11 +146,15 @@ def main() -> None:
     inds = np.where(np.isnan(X))
     X[inds] = np.take(col_med, inds[1])
 
-    # LOSO ridge with per-fold standardisation — critical when mixing
+    # Ridge with per-fold standardisation — critical when mixing
     # units across feature sources (mm³, mm, unit-less embeddings).
     preds = np.zeros_like(y)
-    logo = LeaveOneGroupOut()
-    for tr, te in logo.split(X, y, groups):
+    n_groups = df["subject"].nunique()
+    if args.cv_mode == "loso":
+        splitter = LeaveOneGroupOut()
+    else:
+        splitter = GroupKFold(n_splits=min(5, n_groups))
+    for tr, te in splitter.split(X, y, groups):
         model = Pipeline([
             ("scaler", StandardScaler()),
             ("ridge", RidgeCV(alphas=np.logspace(-3, 3, 25))),
@@ -157,6 +167,7 @@ def main() -> None:
         "n_features": int(X.shape[1]),
         "n_scans": int(len(y)),
         "n_subjects": int(df["subject"].nunique()),
+        "cv_mode": args.cv_mode,
         "raw": metrics(y, preds),
         "cole": metrics(y, cole_correction(y, preds)),
         "beheshti": metrics(y, beheshti_correction(y, preds)),

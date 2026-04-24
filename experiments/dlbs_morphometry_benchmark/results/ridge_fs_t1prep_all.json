@@ -1,0 +1,72 @@
+{
+  "feature_sources": [
+    {
+      "parquet": "results/fastsurfer_features.parquet",
+      "tool": "aseg+DKT.VINN",
+      "value_col": "volume_mm3",
+      "tag": "aseg_DKT_VINN",
+      "n_features": 101,
+      "n_scans_in_source": 60
+    },
+    {
+      "parquet": "results/t1prep_features.parquet",
+      "tool": "t1prep_thickness",
+      "value_col": "thickness_mm",
+      "tag": "t1prep_thickness",
+      "n_features": 71,
+      "n_scans_in_source": 60
+    },
+    {
+      "parquet": "results/t1prep_features.parquet",
+      "tool": "t1prep_area",
+      "value_col": "area_mm2",
+      "tag": "t1prep_area",
+      "n_features": 71,
+      "n_scans_in_source": 60
+    },
+    {
+      "parquet": "results/t1prep_features.parquet",
+      "tool": "t1prep_tissue",
+      "value_col": "volume_mm3",
+      "tag": "t1prep_tissue",
+      "n_features": 5,
+      "n_scans_in_source": 60
+    }
+  ],
+  "n_features": 248,
+  "n_scans": 60,
+  "n_subjects": 23,
+  "cv_mode": "groupkfold5",
+  "raw": {
+    "mae": 7.569914139989188,
+    "rmse": 9.050184283493165,
+    "r2": 0.7920554479053131,
+    "pearson_r": 0.8909028764979202,
+    "bias": -0.6089244842926184,
+    "n": 60
+  },
+  "cole": {
+    "mae": 8.28137147827934,
+    "rmse": 10.11799706803716,
+    "r2": 0.7400907116341562,
+    "pearson_r": 0.8909028764979201,
+    "bias": 2.1197858283509656e-14,
+    "n": 60
+  },
+  "beheshti": {
+    "mae": 6.769735305639312,
+    "rmse": 8.271113323861906,
+    "r2": 0.8263156674265293,
+    "pearson_r": 0.923048129092677,
+    "bias": 3.552713678800501e-16,
+    "n": 60
+  },
+  "zhang": {
+    "mae": 6.802456340890237,
+    "rmse": 8.148615533898308,
+    "r2": 0.8314222097580856,
+    "pearson_r": 0.920831374500056,
+    "bias": -0.3280311150884167,
+    "n": 60
+  }
+}

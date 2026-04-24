@@ -28,7 +28,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import RidgeCV
-from sklearn.model_selection import LeaveOneGroupOut
+from sklearn.model_selection import GroupKFold, LeaveOneGroupOut
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -138,6 +138,14 @@ def main() -> None:
         default="total intracranial",
         help='Region whose volume_mm3 is treated as ICV (FS: total intracranial; T1Prep: TIV)',
     )
+    ap.add_argument(
+        "--cv-mode",
+        choices=["loso", "groupkfold5"],
+        default="groupkfold5",
+        help='LOSO = LeaveOneSubjectOut (deep longitudinal). '
+             'groupkfold5 = GroupKFold(n_splits=5) by subject — matches '
+             'MedARC smri-fm/experiments/synthseg_ridge_baseline default.',
+    )
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument(
         "--wandb-project",
@@ -210,9 +218,14 @@ def main() -> None:
         ])
 
     preds = np.zeros_like(y)
-    if df["subject"].nunique() >= 2:
-        logo = LeaveOneGroupOut()
-        for tr, te in logo.split(X, y, groups):
+    n_groups = df["subject"].nunique()
+    if n_groups >= 2:
+        if args.cv_mode == "loso":
+            splitter = LeaveOneGroupOut()
+        else:  # groupkfold5 — MedARC's smri-fm default
+            # n_splits capped at n_groups to avoid a ValueError on tiny cohorts
+            splitter = GroupKFold(n_splits=min(5, n_groups))
+        for tr, te in splitter.split(X, y, groups):
             model = _mk_ridge()
             model.fit(X[tr], y[tr])
             preds[te] = model.predict(X[te])
@@ -227,6 +240,7 @@ def main() -> None:
         "n_features": int(X.shape[1]),
         "n_scans": int(len(y)),
         "n_subjects": int(df["subject"].nunique()),
+        "cv_mode": args.cv_mode,
         "icv_normalised": bool(args.normalise_by_icv),
         "raw": metrics(y, preds),
         "cole": metrics(y, cole_correction(y, preds)),

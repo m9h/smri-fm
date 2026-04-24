@@ -46,17 +46,19 @@ docker run --gpus all --rm \
     --out_dir /benchmark/results \
     --batch_size 1
 
-echo ">>> 3/5 ridge: BrainIAC 768-d alone"
+echo ">>> 3/5 ridge: BrainIAC 768-d alone (MedARC GroupKFold5)"
 python3 "${BENCH}/scripts/fit_ridge_baseline.py" \
     --features "${BENCH}/results/brainiac_embeddings.parquet" \
     --tool brainiac_embed --value-col value \
+    --cv-mode groupkfold5 \
     --out "${BENCH}/results/ridge_brainiac_embed.json"
 
-echo ">>> 4/5 ridge: FS + T1Prep + BrainIAC concat"
+echo ">>> 4/5 ridge: FS + T1Prep + BrainIAC concat (MedARC GroupKFold5)"
 python3 "${BENCH}/scripts/fit_ridge_concat.py" \
     --source "${BENCH}/results/fastsurfer_features.parquet:aseg+DKT.VINN:volume_mm3" \
     --source "${BENCH}/results/t1prep_features.parquet:t1prep_thickness:thickness_mm" \
     --source "${BENCH}/results/brainiac_embeddings.parquet:brainiac_embed:value" \
+    --cv-mode groupkfold5 \
     --out "${BENCH}/results/ridge_concat_fs_t1prep_brainiac.json"
 
 echo ">>> 5/5 re-weave paper"

@@ -5,7 +5,7 @@
   "n_scans": 60,
   "n_subjects": 23,
   "cv_mode": "groupkfold5",
-  "icv_normalised": false,
+  "icv_normalised": true,
   "raw": {
     "mae": 8.033063119311175,
     "rmse": 9.533937861298172,

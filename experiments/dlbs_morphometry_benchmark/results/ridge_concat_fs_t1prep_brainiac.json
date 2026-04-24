@@ -1,7 +1,7 @@
 {
   "feature_sources": [
     {
-      "parquet": "/home/mhough/dev/smri-fm/experiments/dlbs_morphometry_benchmark/results/fastsurfer_features.parquet",
+      "parquet": "results/fastsurfer_features.parquet",
       "tool": "aseg+DKT.VINN",
       "value_col": "volume_mm3",
       "tag": "aseg_DKT_VINN",
@@ -9,7 +9,7 @@
       "n_scans_in_source": 60
     },
     {
-      "parquet": "/home/mhough/dev/smri-fm/experiments/dlbs_morphometry_benchmark/results/t1prep_features.parquet",
+      "parquet": "results/t1prep_features.parquet",
       "tool": "t1prep_thickness",
       "value_col": "thickness_mm",
       "tag": "t1prep_thickness",
@@ -17,7 +17,7 @@
       "n_scans_in_source": 60
     },
     {
-      "parquet": "/home/mhough/dev/smri-fm/experiments/dlbs_morphometry_benchmark/results/brainiac_embeddings.parquet",
+      "parquet": "results/brainiac_embeddings.parquet",
       "tool": "brainiac_embed",
       "value_col": "value",
       "tag": "brainiac_embed",
@@ -28,36 +28,37 @@
   "n_features": 939,
   "n_scans": 60,
   "n_subjects": 23,
+  "cv_mode": "groupkfold5",
   "raw": {
-    "mae": 7.400641032821729,
-    "rmse": 8.83154973193755,
-    "r2": 0.8019811475320365,
-    "pearson_r": 0.8959189653893656,
-    "bias": -0.3246232423768421,
+    "mae": 8.308741134909083,
+    "rmse": 9.559717868542997,
+    "r2": 0.7679813730569318,
+    "pearson_r": 0.8812694191167023,
+    "bias": -0.9827077333632223,
     "n": 60
   },
   "cole": {
-    "mae": 7.9551528770138615,
-    "rmse": 9.840351341868194,
-    "r2": 0.7541592278072766,
-    "pearson_r": 0.8959189653893652,
-    "bias": -5.329070518200751e-15,
+    "mae": 8.824621754924793,
+    "rmse": 10.643433313695484,
+    "r2": 0.7123951611899062,
+    "pearson_r": 0.8812694191167023,
+    "bias": 1.7526720815415805e-14,
     "n": 60
   },
   "beheshti": {
-    "mae": 6.53179766356652,
-    "rmse": 8.079691854723402,
-    "r2": 0.8342619222977059,
-    "pearson_r": 0.926188765431127,
-    "bias": -3.079018521627101e-15,
+    "mae": 7.46599855445351,
+    "rmse": 9.004789093665801,
+    "r2": 0.7941362912729673,
+    "pearson_r": 0.9106487326320555,
+    "bias": -1.2434497875801752e-15,
     "n": 60
   },
   "zhang": {
-    "mae": 6.5997654238762555,
-    "rmse": 8.102926297805045,
-    "r2": 0.8333073391668157,
-    "pearson_r": 0.9209655794572112,
-    "bias": -0.377720576417161,
+    "mae": 7.353336836140196,
+    "rmse": 8.868471497900591,
+    "r2": 0.8003219849146775,
+    "pearson_r": 0.9096100592893583,
+    "bias": -0.1911059726887784,
     "n": 60
   }
 }
