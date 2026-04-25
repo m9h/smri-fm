@@ -1,0 +1,56 @@
+{
+  "feature_sources": [
+    {
+      "parquet": "results/synthseg_features.parquet",
+      "tool": "synthseg_volumes",
+      "value_col": "volume_mm3",
+      "tag": "synthseg_volumes",
+      "n_features": 72,
+      "n_scans_in_source": 60
+    },
+    {
+      "parquet": "results/t1prep_features.parquet",
+      "tool": "t1prep_thickness",
+      "value_col": "thickness_mm",
+      "tag": "t1prep_thickness",
+      "n_features": 71,
+      "n_scans_in_source": 60
+    }
+  ],
+  "n_features": 143,
+  "n_scans": 60,
+  "n_subjects": 23,
+  "cv_mode": "groupkfold5",
+  "raw": {
+    "mae": 7.2054598197015185,
+    "rmse": 8.496610454320521,
+    "r2": 0.816716184679119,
+    "pearson_r": 0.9061102450720485,
+    "bias": -0.39139698012235846,
+    "n": 60
+  },
+  "cole": {
+    "mae": 7.716030696039665,
+    "rmse": 9.265859675488263,
+    "r2": 0.7820262783207494,
+    "pearson_r": 0.9061102450720485,
+    "bias": 1.9539925233402755e-14,
+    "n": 60
+  },
+  "beheshti": {
+    "mae": 6.773474120274799,
+    "rmse": 8.133982767361317,
+    "r2": 0.8320271087406577,
+    "pearson_r": 0.9253022507282959,
+    "bias": -7.401486830834377e-16,
+    "n": 60
+  },
+  "zhang": {
+    "mae": 6.748679828175785,
+    "rmse": 7.982977557306548,
+    "r2": 0.8382059604199668,
+    "pearson_r": 0.9245801310757218,
+    "bias": -0.2232288583601448,
+    "n": 60
+  }
+}

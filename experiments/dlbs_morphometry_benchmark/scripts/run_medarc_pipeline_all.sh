@@ -70,24 +70,40 @@ run_one_subject() {
     echo ">>> medarc pipeline.py ${sub} $(date -Iseconds)" | tee -a "${log}"
     # Pre-create host output dirs with user ownership so docker doesn't root-own them
     mkdir -p "${OUT_ROOT}/${sub}" "${OUT_ROOT}/${sub}/logs" "${OUT_ROOT}/${sub}/synthseg"
+    # Mount the raw BIDS tree at its absolute path so the T1-only BIDS
+    # symlinks (which store host-absolute targets like /data/raw/openneuro/...)
+    # resolve identically inside the container. Without this, readlink
+    # would fail inside the container and pipeline.py complains "no such file."
+    #
+    # TF_USE_LEGACY_KERAS=1 routes `import keras` → keras 2 (tf_keras), which
+    # mri_synthseg from freesurfer-python 8.2.0 depends on
+    # (BatchNormalization(fused=False) was removed in Keras 3).
+    #
+    # n_workers=2 prevents GPU OOM from 4 parallel mri_synthstrip instances
+    # competing for GB10's ~120 GB unified memory.
+    # Bind-mount the host's patched pipeline.py over the container's so we
+    # can capture mri_synthseg's stderr on failure (the container's bundled
+    # version was built before the diagnostic patch was added).
     docker run --gpus all --rm \
       --user "$(id -u):$(id -g)" \
       -v "${BIDS_T1_ONLY}:/bids:ro" \
-      -v "${RAW_ROOT}:/raw:ro" \
+      -v "${RAW_ROOT}:${RAW_ROOT}:ro" \
       -v "${OUT_ROOT}/${sub}:/output:rw" \
       -v "${HOME}/license.txt:/usr/lib/freesurfer/license.txt:ro" \
+      -v "/tmp/pipeline_patched.py:/app/smri-fm/preprocessing/pipeline.py:ro" \
       -e HOME=/tmp \
+      -e TF_USE_LEGACY_KERAS=1 \
       --entrypoint python3 \
       "${IMG}" /app/smri-fm/preprocessing/pipeline.py \
         --bids /bids \
         --subject "${sub}" \
         --output /output \
         --log_dir /output/logs \
-        --n_workers 4 \
+        --n_workers 1 \
         --itk_threads 4 \
         --synthseg \
         --synthseg_output /output/synthseg \
-        --synthseg_workers 1 2>&1 | tee -a "${log}" | tail -5
+        --synthseg_workers 1 2>&1 | tee -a "${log}" | tail -8
     echo "<<< done ${sub} $(date -Iseconds)" | tee -a "${log}"
 }
 
