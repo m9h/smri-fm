@@ -80,27 +80,29 @@ def preprocess(t1_path: Path, target: int = 96) -> np.ndarray:
 
 
 def load_amaes_resenc_b(checkpoint: Path | None, device: str):
-    \"\"\"Load the AMAES ResEnc-UNet-B FOMO25 baseline.
+    """Load the AMAES ResEnc-UNet-B FOMO25 baseline.
 
-    If `checkpoint` is None, fetch from HF via huggingface_hub.
-    \"\"\"
+    If `checkpoint` is None or doesn't exist, fetch from HF via huggingface_hub
+    (cached at /opt/checkpoints inside the fomo25-arm image).
+    """
     try:
         from asparagus.modules.networks.resenc_unet import resenc_unet_b
     except ImportError:
-        print(\"ERROR: 'asparagus' not found. This script must run inside the fomo25-arm container.\", file=sys.stderr)
+        print("ERROR: 'asparagus' not found. This script must run inside the fomo25-arm container.",
+              file=sys.stderr)
         sys.exit(1)
 
     if checkpoint is None or not checkpoint.exists():
-        print(f\"Checkpoint not found at {checkpoint}, attempting HF download...\", file=sys.stderr)
+        print(f"Checkpoint not at {checkpoint}; resolving via HF cache...", file=sys.stderr)
         from huggingface_hub import hf_hub_download
         checkpoint = Path(hf_hub_download(
-            repo_id=\"FOMO-MRI/AMAES_resenc_b\",
-            filename=\"resenc_unet_b.ckpt\",
-            cache_dir=\"/opt/checkpoints\",
+            repo_id="FOMO-MRI/AMAES_resenc_b",
+            filename="resenc_unet_b.ckpt",
+            cache_dir="/opt/checkpoints",
         ))
-    
-    print(f\"Loading model from: {checkpoint}\")
-    model = resenc_unet_b(dimensions=\"3D\", input_channels=1, output_channels=1)
+
+    print(f"Loading model from: {checkpoint}")
+    model = resenc_unet_b(dimensions="3D", input_channels=1, output_channels=1)
     ckpt = torch.load(checkpoint, map_location="cpu", weights_only=False)
     state = ckpt.get("state_dict", ckpt)
     # Lightning-style "model." or "network." prefixes — strip the first segment
@@ -113,12 +115,15 @@ def load_amaes_resenc_b(checkpoint: Path | None, device: str):
             cleaned[k.split("network.", 1)[1]] = v
         else:
             cleaned[k] = v
-    missing, unexpected = model.load_state_dict(cleaned, strict=False)
-    if missing or unexpected:
-        print(
-            f"load_state_dict: missing={len(missing)} unexpected={len(unexpected)}",
-            file=sys.stderr,
-        )
+    # asparagus's ResidualEncoderUNet may override load_state_dict to return
+    # None rather than the (missing, unexpected) tuple, so we don't unpack.
+    result = model.load_state_dict(cleaned, strict=False)
+    if result is not None:
+        try:
+            print(f"load_state_dict: missing={len(result.missing_keys)} "
+                  f"unexpected={len(result.unexpected_keys)}", file=sys.stderr)
+        except AttributeError:
+            pass
     return model.eval().to(device)
 
 
