@@ -1,18 +1,25 @@
-"""Extract FOMO25 baseline-SSL (mmunetvae) embeddings for DLBS T1s.
+"""Extract FOMO25 baseline-SSL embeddings for DLBS T1s.
+
+Pivot 2026-04-28: upstream jbanusco/fomo25 v1.0.0 has no public
+mmunetvae checkpoint (the README's "💾 Model Checkpoints" section is
+empty), so this targets the actually-published FOMO25 baseline:
+**FOMO-MRI/AMAES_resenc_b** on HuggingFace (ResEnc-UNet-B, FOMO300K
+masked-AE pretraining, paper arxiv 2408.00640). Followup note for the
+team at notes/fomo25_checkpoint_followup.md.
 
 Mirrors `extract_brainiac_embeddings.py` so the downstream ridge call
 is a one-line tool-name swap. CSV-driven over a flat directory of
 already-MNI-1mm-iso skull-stripped T1s (the BrainIAC preprocessing
 output works directly).
 
-Runs **inside** `jbanusco/sslmmunetave:1.0.0` on Legion (image is
-amd64 only). The driver script that invokes docker is alongside this
-file at `run_fomo25_extraction_legion.sh`.
+Runs **inside** `ghcr.io/m9h/fomo25-arm:latest` on DGX Spark (Grace
+Blackwell arm64, NGC torch). The driver script is alongside this
+file at `run_fomo25_extraction_spark.sh`.
 
 Inputs (mounts inside container):
   /csv/brainiac_dlbs_csv.csv          — pat_id, label, dataset
   /scans/<pat_id>.nii.gz              — flat dir of preprocessed T1s
-  /opt/ssl3d/checkpoints/...          — mmunetvae checkpoint (image)
+  /opt/checkpoints/...                — AMAES_resenc_b ckpt (baked at build time)
 
 Outputs (written to mounted /out):
   fomo25_embeddings.npz               — wide, key=pat_id, value=(D,) f32
@@ -24,7 +31,6 @@ Long-form schema (joinable with `fit_ridge_baseline.py --tool fomo25_embed`):
 from __future__ import annotations
 
 import argparse
-import importlib
 import re
 import sys
 from pathlib import Path
@@ -73,30 +79,41 @@ def preprocess(t1_path: Path, target: int = 96) -> np.ndarray:
     return arr[np.newaxis, np.newaxis]  # (1, 1, Z, Y, X)
 
 
-def load_mmunetvae(checkpoint: Path, device: str):
-    """Locate the FOMO25 mmunetvae module + load its checkpoint."""
-    candidates = [
-        "models.networks.mmunetvae",
-        "src.models.networks.mmunetvae",
-        "fomo25.models.networks.mmunetvae",
-    ]
-    module = None
-    for name in candidates:
-        try:
-            module = importlib.import_module(name)
-            break
-        except ImportError:
-            continue
-    if module is None:
-        raise RuntimeError(
-            "mmunetvae module not on PYTHONPATH. Tried:\n  "
-            + "\n  ".join(candidates)
-        )
-    ckpt = torch.load(checkpoint, map_location="cpu")
+def load_amaes_resenc_b(checkpoint: Path | None, device: str):
+    \"\"\"Load the AMAES ResEnc-UNet-B FOMO25 baseline.
+
+    If `checkpoint` is None, fetch from HF via huggingface_hub.
+    \"\"\"
+    try:
+        from asparagus.modules.networks.resenc_unet import resenc_unet_b
+    except ImportError:
+        print(\"ERROR: 'asparagus' not found. This script must run inside the fomo25-arm container.\", file=sys.stderr)
+        sys.exit(1)
+
+    if checkpoint is None or not checkpoint.exists():
+        print(f\"Checkpoint not found at {checkpoint}, attempting HF download...\", file=sys.stderr)
+        from huggingface_hub import hf_hub_download
+        checkpoint = Path(hf_hub_download(
+            repo_id=\"FOMO-MRI/AMAES_resenc_b\",
+            filename=\"resenc_unet_b.ckpt\",
+            cache_dir=\"/opt/checkpoints\",
+        ))
+    
+    print(f\"Loading model from: {checkpoint}\")
+    model = resenc_unet_b(dimensions=\"3D\", input_channels=1, output_channels=1)
+    ckpt = torch.load(checkpoint, map_location="cpu", weights_only=False)
     state = ckpt.get("state_dict", ckpt)
-    state = {k.split("model.", 1)[-1]: v for k, v in state.items()}
-    model = module.MultiModalUNetVAE()
-    missing, unexpected = model.load_state_dict(state, strict=False)
+    # Lightning-style "model." or "network." prefixes — strip the first segment
+    # if present so the bare nn.Module accepts the load.
+    cleaned = {}
+    for k, v in state.items():
+        if k.startswith("model."):
+            cleaned[k.split("model.", 1)[1]] = v
+        elif k.startswith("network."):
+            cleaned[k.split("network.", 1)[1]] = v
+        else:
+            cleaned[k] = v
+    missing, unexpected = model.load_state_dict(cleaned, strict=False)
     if missing or unexpected:
         print(
             f"load_state_dict: missing={len(missing)} unexpected={len(unexpected)}",
@@ -106,16 +123,23 @@ def load_mmunetvae(checkpoint: Path, device: str):
 
 
 def embed(model, vol: np.ndarray, device: str) -> np.ndarray:
+    """AMAES ResEnc-UNet-B forward → pool deepest encoder feature map.
+
+    forward_with_features() returns (decoder_output, feature_list) where
+    feature_list is the multi-scale encoder maps (shallow → deep). The
+    deepest map is the bottleneck representation we pool spatially.
+    """
     with torch.no_grad():
         x = torch.from_numpy(vol).to(device)
-        if hasattr(model, "encode"):
-            z = model.encode(x)
-        elif hasattr(model, "forward_encoder"):
-            z = model.forward_encoder(x)
+        if hasattr(model, "forward_with_features"):
+            _, feats = model.forward_with_features(x)
+            z = feats[-1] if isinstance(feats, (list, tuple)) else feats
+        elif hasattr(model, "_encode"):
+            z = model._encode(x)
+            if isinstance(z, (list, tuple)):
+                z = z[-1]
         else:
             z = model(x)
-        if isinstance(z, (list, tuple)):
-            z = z[0]
         emb = z.mean(dim=tuple(range(2, z.ndim))).squeeze(0).cpu().numpy()
     return emb.astype(np.float32)
 
@@ -126,8 +150,8 @@ def main() -> None:
                    help="CSV with pat_id column (one row per scan)")
     p.add_argument("--root_dir", type=Path, required=True,
                    help="Flat dir of {pat_id}.nii.gz (e.g. BrainIAC-preproc)")
-    p.add_argument("--checkpoint", type=Path,
-                   default=Path("/opt/ssl3d/checkpoints/fomo25_mmunetvae_pretrained.ckpt"))
+    p.add_argument("--checkpoint", type=Path, default=None,
+                   help='AMAES_resenc_b .ckpt (default: fetch from HF)')
     p.add_argument("--out_dir", type=Path, required=True)
     p.add_argument("--device", default=None)
     p.add_argument("--target", type=int, default=96, help="cube side for pad/crop")
@@ -141,7 +165,7 @@ def main() -> None:
     df = pd.read_csv(args.input_csv, dtype={"pat_id": str})
     print(f"input rows: {len(df)}, device: {device}")
 
-    model = None if args.dry_run else load_mmunetvae(args.checkpoint, device)
+    model = None if args.dry_run else load_amaes_resenc_b(args.checkpoint, device)
 
     ids: list[str] = []
     embs: list[np.ndarray] = []
