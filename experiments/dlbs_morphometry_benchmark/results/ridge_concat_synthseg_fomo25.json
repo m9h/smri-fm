@@ -1,0 +1,56 @@
+{
+  "feature_sources": [
+    {
+      "parquet": "results/synthseg_features.parquet",
+      "tool": "synthseg_volumes",
+      "value_col": "volume_mm3",
+      "tag": "synthseg_volumes",
+      "n_features": 72,
+      "n_scans_in_source": 60
+    },
+    {
+      "parquet": "/data/datasets/smri-fm-cmp/fomo-embeds/ds004856/fomo25_embeddings.parquet",
+      "tool": "fomo25_embed",
+      "value_col": "value",
+      "tag": "fomo25_embed",
+      "n_features": 320,
+      "n_scans_in_source": 60
+    }
+  ],
+  "n_features": 392,
+  "n_scans": 60,
+  "n_subjects": 23,
+  "cv_mode": "groupkfold5",
+  "raw": {
+    "mae": 7.7785375111124955,
+    "rmse": 9.621231176403068,
+    "r2": 0.7649858554610152,
+    "pearson_r": 0.8772898291026995,
+    "bias": -0.6171162924294264,
+    "n": 60
+  },
+  "cole": {
+    "mae": 9.094189976849009,
+    "rmse": 10.857916533835773,
+    "r2": 0.7006869176195987,
+    "pearson_r": 0.8772898291026993,
+    "bias": 1.6283271027835628e-14,
+    "n": 60
+  },
+  "beheshti": {
+    "mae": 6.514934706713778,
+    "rmse": 7.778440680144868,
+    "r2": 0.8463906010650953,
+    "pearson_r": 0.9310448605770607,
+    "bias": -2.5461114698070257e-15,
+    "n": 60
+  },
+  "zhang": {
+    "mae": 6.380517286045173,
+    "rmse": 7.797054237567567,
+    "r2": 0.8456545567876159,
+    "pearson_r": 0.9277286566132321,
+    "bias": -0.19156326653696112,
+    "n": 60
+  }
+}
