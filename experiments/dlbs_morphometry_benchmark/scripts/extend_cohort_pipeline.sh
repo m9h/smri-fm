@@ -124,6 +124,20 @@ run_medarc_synthseg() {
         done
     done
 
+    # NB: the container's bundled pipeline.py looks up `/opt/venv/bin/python`
+    # for the SynthSeg subprocess call, but that path doesn't exist in the
+    # currently-published image (regression vs the build the original 23
+    # were processed with). Mount the patched pipeline.py over it. The
+    # patched file lives at /tmp/pipeline_patched.py (saved from the
+    # original 23-subject run) and was tested successfully then.
+    local patched_pipeline="/tmp/pipeline_patched.py"
+    local patch_args=()
+    if [ -f "${patched_pipeline}" ]; then
+        patch_args+=(-v "${patched_pipeline}:/app/smri-fm/preprocessing/pipeline.py:ro")
+    else
+        log "    WARN: ${patched_pipeline} not found; SynthSeg may hit /opt/venv/bin/python error"
+    fi
+
     ${NICE_PREFIX} docker run --rm --gpus all \
         --cpus "${CPU_LIMIT}" --memory "${MEM_LIMIT}" \
         --user "$(id -u):$(id -g)" \
@@ -131,6 +145,7 @@ run_medarc_synthseg() {
         -v "${RAW_ROOT}:${RAW_ROOT}:ro" \
         -v "${sub_dir}:/output:rw" \
         -v "${LICENSE}:/usr/lib/freesurfer/license.txt:ro" \
+        "${patch_args[@]}" \
         -e HOME=/tmp -e TF_USE_LEGACY_KERAS=1 \
         --entrypoint python3 \
         ghcr.io/m9h/medarc-smri-fm:latest \
