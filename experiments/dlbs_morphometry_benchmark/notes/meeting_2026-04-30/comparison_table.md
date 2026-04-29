@@ -9,33 +9,37 @@ All numbers in years. Bootstrap CI from 1000 subject-level resamples.
 | # | Tool | family | feats | raw MAE | r | **Zhang MAE** | r (Z) | 95% CI (Zhang) |
 |---:|---|:-:|---:|---:|---:|---:|---:|---|
 | 1 | **SynthSeg + TIV-norm** | morph |  71 | 5.99 | +0.93 | **4.71** | +0.95 | [2.74, 6.07] |
-| 2 | FastSurfer aseg+DKT + ICV | morph | 100 | 7.53 | +0.88 | **5.48** | +0.93 | [3.40, 7.40] |
-| 3 | FS+T1Prep+BrainIAC + PCA-48 | concat |  48 | 12.71 | +0.71 | **5.74** | +0.91 | — |
-| 4 | SynthSeg (no TIV) | morph |  71 | 7.15 | +0.90 | **5.85** | +0.93 | [3.77, 7.01] |
-| 5 | FastSurfer aseg+DKT | morph | 100 | 7.48 | +0.89 | **5.85** | +0.93 | [3.44, 7.17] |
-| 6 | **FOMO25 (PCA-16)** | ssl |  16 | 9.82 | +0.81 | **5.86** | +0.93 | — |
-| 7 | FS + T1Prep concat (alt) | concat | 171 | 6.65 | +0.91 | **6.31** | +0.93 | — |
-| 8 | SynthSeg + FOMO25 concat | concat | 392 | 7.78 | +0.88 | **6.38** | +0.93 | — |
-| 9 | T1Prep tissue ratios + TIV | morph |   4 | 7.42 | +0.89 | **6.58** | +0.92 | — |
-| 10 | **FOMO25 (PCA-8)** | ssl |   8 | 10.35 | +0.80 | **6.60** | +0.91 | — |
-| 11 | **FOMO25 AMAES_resenc_b** | ssl | 320 | 9.90 | +0.81 | **6.68** | +0.91 | [4.26, 8.00] |
-| 12 | SynthSeg + T1Prep concat | concat | 143 | 7.21 | +0.91 | **6.75** | +0.92 | — |
-| 13 | FS + T1Prep concat | concat | 171 | 7.57 | +0.89 | **6.80** | +0.92 | — |
-| 14 | **FOMO25 (PCA-32)** | ssl |  32 | 10.23 | +0.78 | **6.83** | +0.91 | — |
-| 15 | T1Prep thickness (DKT) | morph |  71 | 8.03 | +0.88 | **7.20** | +0.91 | — |
-| 16 | FS+T1Prep+BrainIAC + PCA-8 | concat |   8 | 8.02 | +0.88 | **7.26** | +0.91 | — |
-| 17 | FS+T1Prep+BrainIAC | concat | 939 | 8.31 | +0.88 | **7.35** | +0.91 | — |
-| 18 | FS+T1Prep+BrainIAC + PCA-16 | concat |  16 | 8.66 | +0.85 | **7.57** | +0.91 | — |
-| 19 | FS+T1Prep+BrainIAC + PCA-32 | concat |  32 | 8.73 | +0.86 | **7.77** | +0.90 | — |
-| 20 | **BrainIAC (PCA-32)** | ssl |  32 | 15.53 | +0.46 | **7.94** | +0.88 | — |
-| 21 | T1Prep thickness + TIV-norm | morph |  71 | 10.31 | +0.80 | **8.24** | +0.89 | — |
-| 22 | **BrainIAC (PCA-16)** | ssl |  16 | 14.68 | +0.52 | **8.26** | +0.89 | — |
-| 23 | T1Prep area + TIV-norm | morph |  71 | 11.70 | +0.73 | **8.97** | +0.86 | — |
-| 24 | T1Prep thk+area concat | morph | 142 | 10.17 | +0.81 | **9.04** | +0.87 | — |
-| 25 | T1Prep thk+area + TIV-norm | morph | 142 | 12.00 | +0.72 | **9.24** | +0.84 | — |
-| 26 | **BrainIAC (PCA-8)** | ssl |   8 | 13.27 | +0.62 | **9.31** | +0.86 | — |
-| 27 | **BrainIAC SimCLR (768-d)** | ssl | 768 | 13.73 | +0.60 | **9.61** | +0.86 | [6.32, 11.28] |
-| 28 | T1Prep area (DKT) | morph |  71 | 16.32 | +0.46 | **10.34** | +0.84 | — |
+| 2 | FS(TIV) + T1Prep concat | concat | 171 | 6.09 | +0.93 | **5.32** | +0.95 | — |
+| 3 | FastSurfer aseg+DKT + ICV | morph | 100 | 7.53 | +0.88 | **5.48** | +0.93 | [3.40, 7.40] |
+| 4 | SynthSeg(TIV) + T1Prep concat | concat | 143 | 6.10 | +0.93 | **5.48** | +0.94 | — |
+| 5 | FS(TIV) + T1Prep + BrainIAC + PCA-48 | concat |  48 | 7.88 | +0.88 | **5.62** | +0.93 | — |
+| 6 | FS+T1Prep+BrainIAC + PCA-48 | concat |  48 | 12.71 | +0.71 | **5.74** | +0.91 | — |
+| 7 | SynthSeg (no TIV) | morph |  71 | 7.15 | +0.90 | **5.85** | +0.93 | [3.77, 7.01] |
+| 8 | FastSurfer aseg+DKT | morph | 100 | 7.48 | +0.89 | **5.85** | +0.93 | [3.44, 7.17] |
+| 9 | **FOMO25 (PCA-16)** | ssl |  16 | 9.82 | +0.81 | **5.86** | +0.93 | — |
+| 10 | FS + T1Prep concat (alt) | concat | 171 | 6.65 | +0.91 | **6.31** | +0.93 | — |
+| 11 | SynthSeg + FOMO25 concat | concat | 392 | 7.78 | +0.88 | **6.38** | +0.93 | — |
+| 12 | T1Prep tissue ratios + TIV | morph |   4 | 7.42 | +0.89 | **6.58** | +0.92 | — |
+| 13 | **FOMO25 (PCA-8)** | ssl |   8 | 10.35 | +0.80 | **6.60** | +0.91 | — |
+| 14 | **FOMO25 AMAES_resenc_b** | ssl | 320 | 9.90 | +0.81 | **6.68** | +0.91 | [4.26, 8.00] |
+| 15 | SynthSeg + T1Prep concat | concat | 143 | 7.21 | +0.91 | **6.75** | +0.92 | — |
+| 16 | FS + T1Prep concat | concat | 171 | 7.57 | +0.89 | **6.80** | +0.92 | — |
+| 17 | **FOMO25 (PCA-32)** | ssl |  32 | 10.23 | +0.78 | **6.83** | +0.91 | — |
+| 18 | FS(TIV) + T1Prep + BrainIAC | concat | 939 | 7.60 | +0.88 | **6.86** | +0.92 | — |
+| 19 | T1Prep thickness (DKT) | morph |  71 | 8.03 | +0.88 | **7.20** | +0.91 | — |
+| 20 | FS+T1Prep+BrainIAC + PCA-8 | concat |   8 | 8.02 | +0.88 | **7.26** | +0.91 | — |
+| 21 | FS+T1Prep+BrainIAC | concat | 939 | 8.31 | +0.88 | **7.35** | +0.91 | — |
+| 22 | FS+T1Prep+BrainIAC + PCA-16 | concat |  16 | 8.66 | +0.85 | **7.57** | +0.91 | — |
+| 23 | FS+T1Prep+BrainIAC + PCA-32 | concat |  32 | 8.73 | +0.86 | **7.77** | +0.90 | — |
+| 24 | **BrainIAC (PCA-32)** | ssl |  32 | 15.53 | +0.46 | **7.94** | +0.88 | — |
+| 25 | T1Prep thickness + TIV-norm | morph |  71 | 10.31 | +0.80 | **8.24** | +0.89 | — |
+| 26 | **BrainIAC (PCA-16)** | ssl |  16 | 14.68 | +0.52 | **8.26** | +0.89 | — |
+| 27 | T1Prep area + TIV-norm | morph |  71 | 11.70 | +0.73 | **8.97** | +0.86 | — |
+| 28 | T1Prep thk+area concat | morph | 142 | 10.17 | +0.81 | **9.04** | +0.87 | — |
+| 29 | T1Prep thk+area + TIV-norm | morph | 142 | 12.00 | +0.72 | **9.24** | +0.84 | — |
+| 30 | **BrainIAC (PCA-8)** | ssl |   8 | 13.27 | +0.62 | **9.31** | +0.86 | — |
+| 31 | **BrainIAC SimCLR (768-d)** | ssl | 768 | 13.73 | +0.60 | **9.61** | +0.86 | [6.32, 11.28] |
+| 32 | T1Prep area (DKT) | morph |  71 | 16.32 | +0.46 | **10.34** | +0.84 | — |
 
 ## Headline takeaways
 
