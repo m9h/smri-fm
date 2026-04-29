@@ -21,7 +21,7 @@ if [ ! -f "${EMB_PARQUET}" ]; then
 fi
 
 cd "${REPO}/experiments/dlbs_morphometry_benchmark"
-python3 scripts/fit_ridge_baseline.py \
+"${REPO}/.venv/bin/python" scripts/fit_ridge_baseline.py \
     --features "${EMB_PARQUET}" \
     --tool fomo25_embed \
     --value-col value \
@@ -32,7 +32,7 @@ python3 scripts/fit_ridge_baseline.py \
 
 echo
 echo "=== summary ==="
-python3 -c "
+"${REPO}/.venv/bin/python" -c "
 import json
 r = json.loads(open('${OUT_DIR}/ridge_fomo25_embed.json').read())
 print(f\"FOMO25 ridge | n_scans={r['n_scans']} subj={r['n_subjects']} feats={r['n_features']}\")

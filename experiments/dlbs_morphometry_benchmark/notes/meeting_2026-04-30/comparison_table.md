@@ -14,17 +14,18 @@ All numbers in years. Bootstrap CI from 1000 subject-level resamples.
 | 4 | FastSurfer aseg+DKT | morph | 100 | 7.48 | +0.89 | **5.85** | +0.93 | [3.44, 7.17] |
 | 5 | FS + T1Prep concat (alt) | concat | 171 | 6.65 | +0.91 | **6.31** | +0.93 | — |
 | 6 | SynthSeg + FOMO25 concat | concat | 392 | 7.78 | +0.88 | **6.38** | +0.93 | — |
-| 7 | T1Prep tissue ratios + ICV | morph |   4 | 7.42 | +0.89 | **6.58** | +0.92 | — |
+| 7 | T1Prep tissue ratios + TIV | morph |   4 | 7.42 | +0.89 | **6.58** | +0.92 | — |
 | 8 | **FOMO25 AMAES_resenc_b** | ssl | 320 | 9.90 | +0.81 | **6.68** | +0.91 | [4.26, 8.00] |
 | 9 | SynthSeg + T1Prep concat | concat | 143 | 7.21 | +0.91 | **6.75** | +0.92 | — |
 | 10 | FS + T1Prep concat | concat | 171 | 7.57 | +0.89 | **6.80** | +0.92 | — |
 | 11 | T1Prep thickness (DKT) | morph |  71 | 8.03 | +0.88 | **7.20** | +0.91 | — |
-| 12 | T1Prep thickness + ICV | morph |  71 | 8.03 | +0.88 | **7.20** | +0.91 | — |
-| 13 | FS+T1Prep+BrainIAC | concat | 939 | 8.31 | +0.88 | **7.35** | +0.91 | — |
-| 14 | T1Prep thk+area concat | morph | 142 | 10.17 | +0.81 | **9.04** | +0.87 | — |
-| 15 | **BrainIAC SimCLR (768-d)** | ssl | 768 | 13.73 | +0.60 | **9.61** | +0.86 | [6.32, 11.28] |
-| 16 | T1Prep area (DKT) | morph |  71 | 16.32 | +0.46 | **10.34** | +0.84 | — |
-| 17 | T1Prep area + ICV | morph |  71 | 16.32 | +0.46 | **10.34** | +0.84 | — |
+| 12 | FS+T1Prep+BrainIAC | concat | 939 | 8.31 | +0.88 | **7.35** | +0.91 | — |
+| 13 | T1Prep thickness + TIV-norm | morph |  71 | 10.31 | +0.80 | **8.24** | +0.89 | — |
+| 14 | T1Prep area + TIV-norm | morph |  71 | 11.70 | +0.73 | **8.97** | +0.86 | — |
+| 15 | T1Prep thk+area concat | morph | 142 | 10.17 | +0.81 | **9.04** | +0.87 | — |
+| 16 | T1Prep thk+area + TIV-norm | morph | 142 | 12.00 | +0.72 | **9.24** | +0.84 | — |
+| 17 | **BrainIAC SimCLR (768-d)** | ssl | 768 | 13.73 | +0.60 | **9.61** | +0.86 | [6.32, 11.28] |
+| 18 | T1Prep area (DKT) | morph |  71 | 16.32 | +0.46 | **10.34** | +0.84 | — |
 
 ## Headline takeaways
 
