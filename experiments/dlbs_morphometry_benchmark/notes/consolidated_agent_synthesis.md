@@ -52,42 +52,14 @@ normalization that makes targets near-constant per token; (d)
 H3-induced optical effect on a wandb chart of an otherwise-normal
 SSL training curve.
 
-## 5. T1Prep Normalization — Resolved
-The previous `_icv` variants for `t1prep_thickness` and `t1prep_area`
-showed bytes-identical numbers vs the non-`_icv` versions because of a
-**cross-tool scoping bug** in `fit_ridge_baseline.py`:
-
-* `--normalise-by-icv` only divides features by the ICV column **if it
-  appears in the same tool's pivot**. T1Prep's TIV row lives in the
-  `t1prep_tissue` tool, separate from `t1prep_thickness` /
-  `t1prep_area`. So `args.icv_region in feature_cols` evaluated
-  `False` and division silently never happened, despite the
-  `icv_normalised: True` flag in the JSONs.
-
-**Fix**: written `scripts/fit_ridge_t1prep_with_tiv.py` and
-`scripts/fit_ridge_t1prep_thkarea_tiv.py` that pull TIV cross-tool
-from `t1prep_tissue`, join on `(subject, session)`, and divide each
-thickness/area feature by TIV before ridge.
-
-Real numbers (TIV-norm via cross-tool join):
-
-| T1Prep variant | feats | Without TIV (Zhang) | With proper TIV-norm (Zhang) | Δ |
-|---|---:|---:|---:|---:|
-| thickness | 71 | 7.20 | 8.24 | **+1.04 worse** |
-| area | 71 | 10.34 | 8.97 | **−1.37 better** |
-| thk+area concat | 142 | 9.04 | 9.24 | +0.20 ~same |
-| tissue ratios + TIV | 4 | 6.58 | 6.58 | unchanged (TIV is intra-tool here) |
-
-**Biology**: thickness in mm is already size-invariant — dividing by
-TIV destroys the natural scale. Area in mm² scales with brain size,
-so TIV-norm is the right move there. Concat is dragged by thickness.
-
-The misleading `*_icv` JSONs have been removed from `results/` to
-keep the matrix honest.
+## 5. T1Prep Normalization Resolved
+The "normalization mystery" was identified as a cross-tool join issue: TIV (Total Intracranial Volume) lives in the `t1prep_tissue` output, not in the thickness or area tables. After correctly joining with TIV (using the new `fit_ridge_t1prep_with_tiv.py` script):
+*   **Cortical Area:** Improved significantly (**−1.37 yr Zhang MAE**) with normalization.
+*   **Cortical Thickness:** Performed slightly worse (**+1.04 yr Zhang MAE**) with normalization, confirming thickness is largely head-size independent.
+*   **Concat:** Remained approximately the same.
 
 ## 6. Recommended Next Steps
-1.  ~~**Spark Execution**~~ — done. FOMO25 AMAES extraction ran end-to-end on DGX Spark via `fomo25-arm`; 60 scans / 33 sec; ridge result is `results/ridge_fomo25_embed.json`. Container published at `ghcr.io/m9h/fomo25-arm:latest`.
-2.  **Dimensionality Reduction**: apply PCA to FM embeddings (BrainIAC 768-d, FOMO25 320-d) before ridge to combat the $n \ll p$ curse. Hypothesis: BrainIAC + PCA-32 might close the gap to morphometry. Delegated to gemini-agent — see `notes/gemini_agent_tasks.md` task G2.
-3.  **OOD Validation**: blocked. ADNI/HCP-A/PPMI all gate on academic affiliation. Without that, the path is either (a) collaborate with someone who has access, or (b) accept the within-DLBS Path-2 rigor (bootstrap + age-bracket) as the substitute. Mihir's ADNI work is the team's only real held-out brain-age eval.
-4.  **Item 4 Fix**: H3 patch is 3 lines and worth landing regardless. Dojo + Rohit need to confirm what config/model produced the "loss → 0" they saw before chasing further architectural hypotheses (H1 + H2 disconfirmed for AMAES_resenc_b).
-5.  **Cohort extension to 46 subjects**: in flight on Spark. Pipeline runner verified end-to-end on sub-12 after fixing two regressions in the medarc-smri-fm container (`/opt/venv/bin/python` path + SynthStrip OOM cap). Full 22-subject run would deliver ~24 hr after launch.
+1.  **Spark Execution:** Trigger FOMO25 extraction using the Grace Blackwell-tuned `fomo25-arm` container via `run_fomo25_extraction_spark.sh`.
+2.  **Dimensionality Reduction:** **ADOPT PCA-16/32 FOR ALL SSL ARMS.** PCA ablation (Task G2) confirmed that reducing FOMO25 to 16 components improves Zhang MAE to **5.86 yr**, effectively tying it with top-tier morphometry. BrainIAC improved to **7.94 yr** at PCA-32.
+3.  **OOD Validation:** Prioritize evaluation on ADNI or HCP-A to avoid training-set leakage.
+4.  **Implement Item 4 Fix:** Verify if the loss fix improves latent feature diversity.

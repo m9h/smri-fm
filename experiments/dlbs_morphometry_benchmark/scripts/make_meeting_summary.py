@@ -55,6 +55,14 @@ DISPLAY = {
     "ridge_concat_synthseg_fomo25":("SynthSeg + FOMO25 concat",   "concat",392),
     "ridge_brainiac_embed":       ("BrainIAC SimCLR (768-d)",     "ssl",   768),
     "ridge_fomo25_embed":         ("FOMO25 AMAES_resenc_b",       "ssl",   320),
+    "ridge_brainiac_embed_pca8":   ("BrainIAC (PCA-8)",            "ssl",    8),
+    "ridge_brainiac_embed_pca16":  ("BrainIAC (PCA-16)",           "ssl",   16),
+    "ridge_brainiac_embed_pca32":  ("BrainIAC (PCA-32)",           "ssl",   32),
+    # PCA-64/128/256 omitted — degenerate to PCA-48 under GroupKFold(5) train
+    # fold size with n=60, so they're redundant copies of each other.
+    "ridge_fomo25_embed_pca8":     ("FOMO25 (PCA-8)",              "ssl",    8),
+    "ridge_fomo25_embed_pca16":    ("FOMO25 (PCA-16)",             "ssl",   16),
+    "ridge_fomo25_embed_pca32":    ("FOMO25 (PCA-32)",             "ssl",   32),
 }
 
 
