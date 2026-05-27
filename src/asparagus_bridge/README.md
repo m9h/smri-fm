@@ -91,6 +91,40 @@ convert_checkpoint("smri_mae", "runs/mae/checkpoint-last.pth", "runs/mae/asparag
 
 Register additional model converters in `asparagus_bridge.checkpoint.CONVERTERS`.
 
+#### SIAM (alternative backbone)
+
+To benchmark [SIAM](https://github.com/romainVala/SIAM) (3D nnU-Net tissue
+segmentation FM) against the same FOMO26 tasks:
+
+```sh
+scripts/setup_siam.sh                                                # one-time
+export SIAM_MODEL_DIR="$HOME/siam_params/v0.3/pred_DS108_LcsfP_Ano"   # add to .env
+```
+
+Then convert and run:
+
+```python
+from asparagus_bridge.checkpoint import convert_checkpoint
+convert_checkpoint(
+    "smri_siam",
+    "$SIAM_MODEL_DIR/fold_0/checkpoint_final.pth",
+    "runs/siam/asparagus.ckpt",
+)
+```
+
+```sh
+uv run asp_finetune_reg \
+  task=REGR002_FOMO26_BrainAge \
+  +model=smri_siam \
+  checkpoint_path=runs/siam/asparagus.ckpt \
+  data.train_split=split_80_10_10 \
+  data.test_split=TEST_80_10_10
+```
+
+The wrapper loads SIAM's nnU-Net architecture from `$SIAM_MODEL_DIR/plans.json`
+at construction time; override the configuration name with `SIAM_CONFIG`
+(default `3d_fullres`).
+
 Use the converted `runs/mae/asparagus.ckpt` path in the finetuning and probing
 commands below.
 
