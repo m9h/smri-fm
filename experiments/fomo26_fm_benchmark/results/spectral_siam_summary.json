@@ -1,0 +1,13 @@
+{
+  "n_conv3d_layers": 69,
+  "n_with_alpha": 69,
+  "alpha_mean": 2.064736905220666,
+  "alpha_median": 2.1979884357359607,
+  "alpha_min": 1.0461455910651705,
+  "alpha_max": 2.9989477641370144,
+  "frac_alpha_lt_2": 0.4492753623188406,
+  "frac_alpha_lt_3": 1.0,
+  "frac_alpha_lt_6": 1.0,
+  "log_norm_mean": -0.9056305779495101,
+  "stable_rank_mean": 12.704914293427398
+}
