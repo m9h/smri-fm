@@ -1,0 +1,13 @@
+{
+  "n_linear_layers": 49,
+  "n_with_alpha": 49,
+  "alpha_mean": 2.961582762735423,
+  "alpha_median": 2.988850674802732,
+  "alpha_min": 2.6251711056594487,
+  "alpha_max": 2.9998569312358128,
+  "frac_alpha_lt_2": 0.0,
+  "frac_alpha_lt_3": 1.0,
+  "frac_alpha_lt_6": 1.0,
+  "log_norm_mean": 1.5165434564862932,
+  "stable_rank_mean": 300.06626954370614
+}
