@@ -119,6 +119,11 @@ def main() -> int:
     ap.add_argument("--limit-synth", type=int, default=None, help="optional cap on number of synthetic samples")
     ap.add_argument("--limit-real", type=int, default=None, help="optional cap on real-corpus size")
     ap.add_argument("--device", type=str, default="cpu", help="torch device for the matmul (cpu or cuda)")
+    ap.add_argument("--brain-mask", action="store_true",
+                    help="restrict Pearson to the union of nonzero voxels in the real corpus. "
+                         "REQUIRED for skull-stripped/registered sMRI: the shared zero background "
+                         "otherwise inflates inter-subject correlation (DLBS calibration: full-volume "
+                         "floor 0.97 with 39%% false-positives >0.93, vs brain-masked floor 0.90 / 0%%).")
     args = ap.parse_args()
 
     if not args.synthetic.exists():
@@ -155,6 +160,13 @@ def main() -> int:
             print(f"    loaded {i+1}/{len(real_entries)}")
     print(f"    real_mat shape: {real_mat.shape}  approx GB: {real_mat.nbytes/1e9:.2f}")
 
+    brain_cols = None
+    if args.brain_mask:
+        brain_cols = (real_mat != 0).any(axis=0)
+        n_brain = int(brain_cols.sum())
+        print(f">>> brain-masking: {n_brain:,}/{V:,} voxels nonzero in >=1 real volume ({n_brain/V:.1%})")
+        real_mat = real_mat[:, brain_cols]
+
     device = torch.device(args.device)
     print(f">>> mean-centering + L2-normalizing real rows on {device}")
     real_t = torch.from_numpy(real_mat).to(device)
@@ -184,6 +196,8 @@ def main() -> int:
         if batch.shape[1] != V:
             print(f"ERROR: synthetic batch flat size {batch.shape[1]} != real {V}", file=sys.stderr)
             return 2
+        if brain_cols is not None:
+            batch = batch[:, brain_cols]
 
         batch_t = torch.from_numpy(batch).to(device)
         batch_norm = _norm_rows(batch_t)
