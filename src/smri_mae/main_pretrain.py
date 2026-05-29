@@ -336,7 +336,7 @@ def train_one_epoch(
                 img_mask=masks,
                 mask_ratio=args.mask_ratio,
                 pred_mask_ratio=args.pred_mask_ratio,
-                mask_fn=mask_fn if args.masking != "random" else None,
+                mask_fn=mask_fn,
                 include_mask_stats=profile_step,
                 with_state=False,
             )
@@ -434,7 +434,7 @@ def evaluate(
                 img_mask=img_mask,
                 mask_ratio=args.mask_ratio,
                 pred_mask_ratio=args.pred_mask_ratio,
-                mask_fn=mask_fn if args.masking != "random" else None,
+                mask_fn=mask_fn,
             )
 
         metric_logger.update(loss=loss)

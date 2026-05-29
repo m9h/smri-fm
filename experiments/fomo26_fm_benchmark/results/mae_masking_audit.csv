@@ -1,0 +1,5 @@
+name,N_total_patches,n_brain_patches,n_visible,n_visible_in_brain,frac_visible_in_brain,n_masked_brain_targets,frac_masked_in_brain,visible_budget_target
+bypass (mask_fn=None),216,151,37,37,1.0,114,1.0,37
+RandomMasking,216,151,37,37,1.0,114,1.0,37
+BlockMasking,216,151,37,37,1.0,114,1.0,37
+HybridMasking,216,151,37,37,1.0,114,1.0,37
