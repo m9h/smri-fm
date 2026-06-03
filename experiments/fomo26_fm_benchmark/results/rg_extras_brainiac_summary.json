@@ -1,0 +1,22 @@
+{
+  "n_layers": 97,
+  "phi_1_mean": 0.004312993451231484,
+  "phi_1_median": 0.005107859357033412,
+  "phi_5_mean": 0.021099824092935517,
+  "phi_5_median": 0.025009887626486777,
+  "phi_10_mean": 0.041328049915061685,
+  "phi_10_median": 0.048948419084658266,
+  "M_tr_mean": 498.7266809283744,
+  "M_tr_median": 384.34586525908713,
+  "M_tr_frac_mean": 0.60917270261835,
+  "M_tr_frac_median": 0.5004503453894363,
+  "alpha_mean": 8.014182628825896,
+  "alpha_median": 4.668200898936327,
+  "n_traps_isolated_total": 0.0,
+  "layers_with_n_traps_isolated": 0,
+  "rand_num_spikes_total": 1528.0,
+  "layers_with_rand_num_spikes": 1,
+  "num_pl_spikes_total": 14474.0,
+  "layers_with_num_pl_spikes": 97,
+  "frac_alpha_lt2": 0.12371134020618557
+}

@@ -1,0 +1,102 @@
+{
+  "tasks": {
+    "SEG009_FOMO26_Meningioma": {
+      "smri_siam": 0.0,
+      "smri_mmunetvae": 0.0
+    },
+    "SEG010_FOMO26_TrigeminalNeuralgia": {
+      "smri_siam": 0.1838,
+      "smri_mmunetvae": 0.2764
+    }
+  },
+  "arms": {
+    "smri_siam": {
+      "SEG009_FOMO26_Meningioma": {
+        "fg_mean_dice": 0.0,
+        "n_classes": 2,
+        "per_class": {
+          "0": {
+            "dice": 0.9996,
+            "jaccard": 0.9993,
+            "sensitivity": 0.9995,
+            "precision": 0.9997
+          },
+          "1": {
+            "dice": 0.0,
+            "jaccard": 0.0,
+            "sensitivity": 0.0,
+            "precision": 0.0
+          }
+        }
+      },
+      "SEG010_FOMO26_TrigeminalNeuralgia": {
+        "fg_mean_dice": 0.1838,
+        "n_classes": 3,
+        "per_class": {
+          "0": {
+            "dice": 1.0,
+            "jaccard": 1.0,
+            "sensitivity": 1.0,
+            "precision": 1.0
+          },
+          "1": {
+            "dice": 0.3676,
+            "jaccard": 0.2598,
+            "sensitivity": 0.3339,
+            "precision": 0.6181
+          },
+          "2": {
+            "dice": 0.0,
+            "jaccard": 0.0,
+            "sensitivity": 0.0,
+            "precision": NaN
+          }
+        }
+      }
+    },
+    "smri_mmunetvae": {
+      "SEG009_FOMO26_Meningioma": {
+        "fg_mean_dice": 0.0,
+        "n_classes": 2,
+        "per_class": {
+          "0": {
+            "dice": 0.9998,
+            "jaccard": 0.9997,
+            "sensitivity": 0.9999,
+            "precision": 0.9997
+          },
+          "1": {
+            "dice": 0.0,
+            "jaccard": 0.0,
+            "sensitivity": 0.0,
+            "precision": 0.0
+          }
+        }
+      },
+      "SEG010_FOMO26_TrigeminalNeuralgia": {
+        "fg_mean_dice": 0.2764,
+        "n_classes": 3,
+        "per_class": {
+          "0": {
+            "dice": 1.0,
+            "jaccard": 1.0,
+            "sensitivity": 1.0,
+            "precision": 1.0
+          },
+          "1": {
+            "dice": 0.3293,
+            "jaccard": 0.2203,
+            "sensitivity": 0.2759,
+            "precision": 0.4313
+          },
+          "2": {
+            "dice": 0.2236,
+            "jaccard": 0.1312,
+            "sensitivity": 0.2039,
+            "precision": 0.3365
+          }
+        }
+      }
+    }
+  }
+}

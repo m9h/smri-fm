@@ -1,0 +1,22 @@
+{
+  "n_layers": 20,
+  "phi_1_mean": NaN,
+  "phi_1_median": NaN,
+  "phi_5_mean": NaN,
+  "phi_5_median": NaN,
+  "phi_10_mean": NaN,
+  "phi_10_median": NaN,
+  "M_tr_mean": NaN,
+  "M_tr_median": NaN,
+  "M_tr_frac_mean": NaN,
+  "M_tr_frac_median": NaN,
+  "alpha_mean": 2.655192174152652,
+  "alpha_median": 2.002333989913488,
+  "n_traps_isolated_total": 0.0,
+  "layers_with_n_traps_isolated": 0,
+  "rand_num_spikes_total": 448.0,
+  "layers_with_rand_num_spikes": 17,
+  "num_pl_spikes_total": 33137.0,
+  "layers_with_num_pl_spikes": 20,
+  "frac_alpha_lt2": 0.45
+}

@@ -1,0 +1,7 @@
+diagnostic,spearman_regr002_quality(-MAE),spearman_cls002_acc_full,spearman_cls002_acc_dwi
+alpha_median,-0.7142857142857143,-0.5296408977028497,-0.6767633692869746
+frac_alpha_lt2,0.7412493166611012,0.5627748595326502,0.6253053994807224
+phi_1_median,0.5,,
+M_tr_median,-0.5,,
+M_tr_frac_median,0.5,,
+n_traps_isolated_total,,,

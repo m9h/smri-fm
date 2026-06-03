@@ -23,6 +23,8 @@ from pathlib import Path
 import torch.nn as nn
 from torch import Tensor
 
+from asparagus_bridge.seg_inference import SlidingWindowSegMixin
+
 
 def _resolve_siam_plans() -> tuple[dict, dict]:
     """Load plans.json and dataset.json from $SIAM_MODEL_DIR."""
@@ -119,7 +121,7 @@ class SmriSiamClsRegBackbone(nn.Module):
         return feat[:, :, None, None, None]
 
 
-class SmriSiamSegBackbone(nn.Module):
+class SmriSiamSegBackbone(SlidingWindowSegMixin, nn.Module):
     """Full SIAM nnU-Net for asparagus segmentation downstream tasks.
 
     Exposes `self.encoder` + `self.decoder` so the converter's
