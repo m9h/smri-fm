@@ -1,0 +1,32 @@
+# @package model
+# FROM-SCRATCH CONTROL: nnU-Net (identical architecture to smri_siam, built from
+# the SIAM plans.json topology) with RANDOM init — no pretrained checkpoint is
+# loaded. Isolates how much SIAM's supervised tissue-seg pretraining buys over a
+# randomly-init nnU-Net of the same topology. This is the only seg-capable
+# control (SwinViT/ViT-B controls are encoder-only), so it carries a _seg_net
+# matching the SIAM seg backbone. Requires SIAM_MODEL_DIR for plans.json (TOPOLOGY
+# only — no weights are read); the driver passes no checkpoint_path.
+
+dimensions: 3D
+deep_supervision: False
+
+cls_net: scratch_nnunet
+reg_net: scratch_nnunet
+seg_net: scratch_nnunet
+
+_seg_net:
+  _target_: asparagus_bridge.models_smri_siam.SmriSiamSegBackbone
+  dimensions: ${model.dimensions}
+  deep_supervision: ${model.deep_supervision}
+
+_cls_net:
+  _target_: asparagus_bridge.models_smri_siam.SmriSiamClsRegBackbone
+  dimensions: ${model.dimensions}
+
+_reg_net:
+  _target_: asparagus_bridge.models_smri_siam.SmriSiamClsRegBackbone
+  dimensions: ${model.dimensions}
+
+finetune_optim: AdamW
+finetune_lr: 1e-4
+weight_decay: 3e-5

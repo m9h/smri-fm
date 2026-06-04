@@ -1,0 +1,25 @@
+# @package model
+# FROM-SCRATCH CONTROL: ViT-B (identical architecture to smri_brainiac — MONAI
+# ViT-B, img 96^3, patch 16, hidden 768, 12 layers/heads) with RANDOM init — no
+# pretrained checkpoint is loaded. Isolates how much BrainIAC's SimCLR pretrain
+# buys over a randomly-init ViT-B of the same capacity. The driver passes no
+# checkpoint_path, so asparagus leaves the encoder at fresh init. Reuses the
+# validated brainiac backbone class so topology matches exactly.
+
+dimensions: 3D
+
+cls_net: scratch_vitb
+reg_net: scratch_vitb
+seg_net: scratch_vitb
+
+_cls_net:
+  _target_: asparagus_bridge.models_smri_brainiac.SmriBrainiacClsRegBackbone
+  dimensions: ${model.dimensions}
+
+_reg_net:
+  _target_: asparagus_bridge.models_smri_brainiac.SmriBrainiacClsRegBackbone
+  dimensions: ${model.dimensions}
+
+finetune_optim: AdamW
+finetune_lr: 1e-4
+weight_decay: 3e-5

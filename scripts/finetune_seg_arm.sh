@@ -14,7 +14,7 @@
 # Env: ARM, SEG_TASK required. DEBUG=1 (default) short smoke; DEBUG=0 real run.
 set -euo pipefail
 
-ARM=${ARM:?set ARM=smri_siam|smri_mmunetvae}
+ARM=${ARM:?set ARM=smri_siam|smri_mmunetvae|scratch_nnunet}
 SEG_TASK=${SEG_TASK:?set SEG_TASK=SEG009_FOMO26_Meningioma|SEG010_FOMO26_TrigeminalNeuralgia}
 
 REPO=/workspace/smri-fm
@@ -44,14 +44,20 @@ PY
     nibabel scikit-image scikit-learn pandas scipy einops 2>&1 | tail -3 || true
 fi
 
-# per-arm checkpoint conversion -> asparagus state_dict
+# per-arm checkpoint conversion -> asparagus state_dict. The from-scratch control
+# (scratch_nnunet) loads NO checkpoint: CKPT_ARG stays empty so resolve_checkpoint
+# returns None and the SIAM-topology nnU-Net trains from random init.
 CKPT=/fomo26/${ARM#smri_}_seg_asparagus.ckpt
+CKPT_ARG=(checkpoint_path="$CKPT" training.load_decoder=False)
 case "$ARM" in
   smri_siam)
     python -c "from asparagus_bridge.checkpoint import convert_checkpoint; convert_checkpoint('smri_siam', '$SIAM_MODEL_DIR/fold_0/checkpoint_final.pth', '$CKPT'); print('wrote', '$CKPT')" ;;
   smri_mmunetvae)
     SRC=${MMUNETVAE_CKPT:-/fomo26/weights/mmunetvae/fomo25_mmunetvae_pretrained.ckpt}
     python -c "from asparagus_bridge.models_smri_mmunetvae import convert_mmunetvae_checkpoint; convert_mmunetvae_checkpoint('$SRC', '$CKPT'); print('wrote', '$CKPT')" ;;
+  scratch_nnunet)
+    CKPT_ARG=()  # from-scratch: random init, no weights to convert or load
+    echo ">>> FROM-SCRATCH control (scratch_nnunet): no checkpoint, random init" ;;
   *) echo "unknown ARM=$ARM" >&2; exit 2 ;;
 esac
 
@@ -81,10 +87,9 @@ set -x
 python -m asparagus.pipeline.run.finetune_seg \
   task="$SEG_TASK" \
   +model="$ARM" \
-  checkpoint_path="$CKPT" \
+  "${CKPT_ARG[@]}" \
   data.train_split=split_80_10_10 \
   data.test_split=TEST_80_10_10 \
-  training.load_decoder=False \
   hardware.num_workers=8 \
   logger.wandb_logging=False \
   hydra.run.dir="$RUNDIR" \

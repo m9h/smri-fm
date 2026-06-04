@@ -1,0 +1,26 @@
+# @package model
+# FROM-SCRATCH CONTROL: SwinViT-V2 (identical architecture to smri_fomo60k /
+# smri_triad) with RANDOM initialization — no pretrained checkpoint is loaded.
+# Isolates how much the FM arms' MAE pretraining buys over a randomly-init Swin
+# encoder of the same capacity. The control-ness lives entirely in the driver:
+# it passes no checkpoint_path, so asparagus' BaseModule leaves the encoder at
+# its fresh init (resolve_checkpoint -> None -> weights not loaded). Reuses the
+# validated fomo60k backbone class so topology matches exactly.
+
+dimensions: 3D
+
+cls_net: scratch_swinvit
+reg_net: scratch_swinvit
+seg_net: scratch_swinvit
+
+_cls_net:
+  _target_: asparagus_bridge.models_smri_fomo60k.SmriFomo60kClsRegBackbone
+  dimensions: ${model.dimensions}
+
+_reg_net:
+  _target_: asparagus_bridge.models_smri_fomo60k.SmriFomo60kClsRegBackbone
+  dimensions: ${model.dimensions}
+
+finetune_optim: AdamW
+finetune_lr: 1e-4
+weight_decay: 3e-5
