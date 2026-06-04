@@ -36,26 +36,21 @@ export HYDRA_FULL_ERROR=1
 [ "$ARM" = "scratch_nnunet" ] && export SIAM_MODEL_DIR=${SIAM_MODEL_DIR:-/siam_params/v0.3/pred_DS108_LcsfP_Ano}
 mkdir -p "$ASPARAGUS_MODELS" "$ASPARAGUS_RESULTS" "$ASPARAGUS_RAW_LABELS"
 
-echo ">>> torch/cuda check"
-python -c "import torch; print('torch', torch.__version__, 'cuda', torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')"
-
-echo ">>> pinning NGC torch/torchvision in a constraints file (no downgrade)"
-CONS=/tmp/constraints.txt
-python - <<'PY' > "$CONS"
-import torch
-print(f"torch=={torch.__version__}")
+# deps once per container; skip silently if already present (so a multi-arm
+# sweep in one container installs only on the first arm)
+if ! python -c "import nnunetv2, monai" 2>/dev/null; then
+  CONS=/tmp/constraints.txt
+  python - > "$CONS" <<'PY'
+import torch; print(f"torch=={torch.__version__}")
 try:
     import torchvision; print(f"torchvision=={torchvision.__version__}")
-except Exception:
-    pass
+except Exception: pass
 PY
-cat "$CONS"
-
-echo ">>> installing asparagus runtime deps (constraint-pinned)"
-pip install -q --no-cache-dir --root-user-action=ignore -c "$CONS" \
-  gardening_tools 'monai==1.5.2' 'lightning==2.5.0' torchmetrics \
-  hydra-core omegaconf python-dotenv wandb nnunetv2 \
-  nibabel scikit-image scikit-learn pandas scipy einops 2>&1 | tail -5 || true
+  pip install -q --no-cache-dir --root-user-action=ignore -c "$CONS" \
+    gardening_tools 'monai==1.5.2' 'lightning==2.5.0' torchmetrics \
+    hydra-core omegaconf python-dotenv wandb nnunetv2 \
+    nibabel scikit-image scikit-learn pandas scipy einops 2>&1 | tail -3 || true
+fi
 
 echo ">>> FROM-SCRATCH control ($ARM): no checkpoint, random init"
 
