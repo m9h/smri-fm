@@ -1,5 +1,13 @@
 # DLBS brain-age ridge — comprehensive comparison across morphometry + SSL
 
+> **⚠️ This is the v1 (23-subject / 60-scan) matrix.** Scaling to the v2 cohort
+> (42 subjects / 117 scans) **reverses the ranking below**: the volumetric
+> leaders here (SynthSeg+TIV #1 at 4.71, FastSurfer #2 at 5.48) collapse to the
+> *bottom* at v2 (Zhang 9.39 and 9.28), while FOMO25 (#7 here at 6.68) rises to
+> a *tie for #1* (5.87). The swing is a verified per-subject effect, not an
+> artifact — see `consolidated_agent_synthesis.md` §3 and `compare_v1_v2.py`.
+> Read this table as the small-n baseline, not the current standing.
+
 Following up on item 3 (FOMO25 SSL ridge) from the smri-fm meeting,
 here is the full matrix of every ridge regressor we've fit on the
 DLBS 23-subject sub-cohort, alongside the new FOMO25 result, so the
