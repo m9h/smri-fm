@@ -94,3 +94,47 @@ rest via `extract_bridge_embeddings.py` (one loop over the `asparagus_bridge`
 mmunetvae/fomo60k×4/simclr3d/triad/anatcl (`/data/datasets/fomo26/weights/`),
 brainiac (`/home/mhough/dev/BrainIAC/...`), siam (`/home/mhough/siam_params/...`,
 needs `SIAM_MODEL_DIR`). Drivers in `run/`. Table: `scripts/compare_fomo26_t3.py`.
+
+---
+
+# ISLES22 multispectral ischemic-stroke lesion segmentation (the modality-matched task)
+
+**Why:** brain-age on T1 is a weak FM test (morphometry-favorable, single modality).
+Infarct seg lives on DWI/ADC — the *plurality* modality in FOMO300K pretraining —
+and is dense prediction (what these FMs are built for), with no morphometry baseline.
+The FOMO26 infarct task is too small (test n≈2), so we use **ISLES22** (Zenodo
+7153326, CC-BY): 250 cases, DWI/ADC/FLAIR + expert lesion masks; one of the FOMO260K
+paper's own validation tasks (their AMAES Dice 73.98).
+
+**Setup:** DWI+ADC only (co-registered 250/250 with the masks; FLAIR is in a separate
+space, excluded). New asparagus dataset `SEG011_ISLES22_IschStroke` (2 modalities, 2
+classes), 200/25/25 split. Seg-finetune via the team's pipeline; input conv repeats
+SIAM/mmunetvae's 1-channel stem to 2. Vendored def: `asparagus_seg/SEG011_ISLES22_IschStroke.py`.
+
+## Results (test n=25, lesion Dice)
+
+| Arm | lesion Dice | sens | prec | note |
+|---|---|---|---|---|
+| **mmunetvae** (finetuned) | **0.608** | 0.63 | 0.77 | complete |
+| siam (finetuned) | val 0.76; test crashed | — | — | trained well; full-volume inference shape bug |
+
+**Reference:** FOMO260K paper AMAES on ISLES22 = **73.98** (3-modality, full challenge protocol).
+**Team FOMO26 seg leaderboard for context:** SEG009 meningioma **0.0**, SEG010 trigeminal **0.18–0.28**.
+
+## Read
+
+**This is where the FMs actually work.** mmunetvae hits **Dice 0.61** on stroke-lesion
+seg — vs **0.0 / 0.18** on the team's other (non-diffusion, tiny) FOMO26 seg tasks. The
+modality-matched, properly-powered infarct task is the fairest FM test in this study,
+and the FMs pass it. siam reached **val Dice 0.76** (near the paper's AMAES 73.98) but
+its full-volume test inference crashed on an nnU-Net anisotropic-pooling skip-concat
+shape mismatch (ISLES depth 73; `Expected size 4 but got size 3`) — a fixable
+inference bug, not a quality issue (`best.ckpt` saved).
+
+## Remaining
+
+- Fix siam's sliding-window test inference (round inference patch to the net's stride),
+  re-run test on the saved checkpoint → siam Dice (expect ~0.7+ from val).
+- Encoder-only arms (fomo60k/AMAES/anatcl/triad/simclr3d) need bolt-on seg decoders to
+  join — esp. fomo60k (the frozen brain-age champion): does its lead hold on stroke seg?
+- Optional: add FLAIR via resampling to DWI space (3-modality, matches paper protocol).
