@@ -1,0 +1,8 @@
+# Regenerable / machine-local artifacts — keep code, ridge JSONs, note, small inputs.
+data/t3_flat/
+data/fastsurfer_farm/
+data/input_csv_smoke.csv
+results/*_embed/
+results/*_embed_160/
+results/*_embed_smoke/
+logs/
