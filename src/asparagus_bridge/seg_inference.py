@@ -44,9 +44,30 @@ class SlidingWindowSegMixin:
         for xs in x_steps:
             for ys in y_steps:
                 for zs in z_steps:
-                    out = self.forward(data[:, :, xs:xs + px, ys:ys + py, zs:zs + pz])
+                    out = self._forward_divisible(data[:, :, xs:xs + px, ys:ys + py, zs:zs + pz])
                     canvas[:, :, xs:xs + px, ys:ys + py, zs:zs + pz] += out
         return canvas
+
+    # Encoder/decoder strided U-Nets require each spatial dim divisible by the
+    # cumulative pooling stride, else decoder upsampling and the encoder skip
+    # mismatch by a voxel ("Expected size 4 but got size 3"). fit_patch_size_to_image_size
+    # can hand us a tile (e.g. 112 or a 73-derived dim) that isn't, so pad the tile
+    # up to a multiple of POOL_STRIDE, run forward, then crop the logits back.
+    # SIAM's 3d_fullres plan is anisotropic — cumulative stride 64x64x32 (6 of 7
+    # stages stride-2 in x/y, 5 in z). 64 is divisible by all of those and by
+    # mmunetvae's 16, so a uniform pad-to-64 makes every tile decoder-safe.
+    POOL_STRIDE = 64
+
+    def _forward_divisible(self, patch: Tensor) -> Tensor:
+        sp = patch.shape[2:]
+        pads = [(0, (-d) % self.POOL_STRIDE) for d in sp]
+        if any(hi for _, hi in pads):
+            flat = []
+            for lo, hi in reversed(pads):  # F.pad consumes dims last-to-first
+                flat += [lo, hi]
+            patch = F.pad(patch, flat)
+        out = self.forward(patch)
+        return out[:, :, : sp[0], : sp[1], : sp[2]]
 
     def sliding_window_predict(self, data: Tensor, patch_size, overlap: float, mirror: bool = False) -> Tensor:
         assert len(patch_size) == 3, f"only 3D patches supported, got patch_size={patch_size}"

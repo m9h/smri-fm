@@ -115,26 +115,37 @@ SIAM/mmunetvae's 1-channel stem to 2. Vendored def: `asparagus_seg/SEG011_ISLES2
 
 | Arm | lesion Dice | sens | prec | note |
 |---|---|---|---|---|
-| **mmunetvae** (finetuned) | **0.608** | 0.63 | 0.77 | complete |
-| siam (finetuned) | val 0.76; test crashed | — | — | trained well; full-volume inference shape bug |
+| **siam** (finetuned) | **0.734** | 0.71 | 0.85 | top arm |
+| **mmunetvae** (finetuned) | **0.608** | 0.63 | 0.77 | |
 
-**Reference:** FOMO260K paper AMAES on ISLES22 = **73.98** (3-modality, full challenge protocol).
+**Reference:** FOMO260K paper AMAES on ISLES22 = **0.740** (3-modality, full challenge protocol).
 **Team FOMO26 seg leaderboard for context:** SEG009 meningioma **0.0**, SEG010 trigeminal **0.18–0.28**.
 
 ## Read
 
-**This is where the FMs actually work.** mmunetvae hits **Dice 0.61** on stroke-lesion
-seg — vs **0.0 / 0.18** on the team's other (non-diffusion, tiny) FOMO26 seg tasks. The
-modality-matched, properly-powered infarct task is the fairest FM test in this study,
-and the FMs pass it. siam reached **val Dice 0.76** (near the paper's AMAES 73.98) but
-its full-volume test inference crashed on an nnU-Net anisotropic-pooling skip-concat
-shape mismatch (ISLES depth 73; `Expected size 4 but got size 3`) — a fixable
-inference bug, not a quality issue (`best.ckpt` saved).
+**This is where the FMs actually work — and they hit published SOTA.** siam reaches
+**Dice 0.734** on stroke-lesion seg, essentially matching the FOMO paper's AMAES (0.740)
+**with only 2 modalities (DWI+ADC) vs the paper's 3.** mmunetvae 0.61. Both vastly exceed
+the team's other FOMO26 seg tasks (meningioma 0.0, trigeminal 0.18) — non-diffusion, tiny.
+The modality-matched, properly-powered (n=25 test) infarct task is the fairest FM test in
+this study, and the FMs pass it decisively. Contrast with the T1 brain-age task, where the
+frozen FMs mostly *lost* to morphometry: FM value is real but task- and modality-dependent.
+
+## siam inference fix (resolved)
+
+siam trained fine (val Dice 0.76) but full-volume test inference crashed on an nnU-Net
+skip-concat shape mismatch (`Expected size 4 but got size 3`). Root cause: SIAM's
+`3d_fullres` plan is **anisotropic** — cumulative stride **64×64×32** — so a fitted
+inference tile not divisible by that mismatches the decoder. Fix: `SlidingWindowSegMixin._forward_divisible`
+pads each tile up to a multiple of 64 (divisible by SIAM's 64/64/32 and mmunetvae's 16),
+forwards, crops logits back. Re-ran test-only on the saved `best.ckpt` via a new
+`asparagus/pipeline/run/predict_seg.py` (fit skipped, `TEST_CKPT` env) → Dice 0.734.
 
 ## Remaining
 
-- Fix siam's sliding-window test inference (round inference patch to the net's stride),
-  re-run test on the saved checkpoint → siam Dice (expect ~0.7+ from val).
 - Encoder-only arms (fomo60k/AMAES/anatcl/triad/simclr3d) need bolt-on seg decoders to
-  join — esp. fomo60k (the frozen brain-age champion): does its lead hold on stroke seg?
-- Optional: add FLAIR via resampling to DWI space (3-modality, matches paper protocol).
+  join — esp. fomo60k (the frozen brain-age champion): does its lead hold on stroke seg,
+  or is FM quality task-specific (as CLS002 hinted)?
+- Optional: add FLAIR via resampling to DWI space (3-modality, full paper protocol).
+- A from-scratch nnU-Net control (the asparagus `scratch_nnunet` arm) to quantify the
+  pretraining gain (paper: AMAES 0.740 vs scratch 0.7286).
