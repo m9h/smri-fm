@@ -22,9 +22,15 @@ ARMS = [
     ("AMAES resenc_b @160 native (frozen)", "amaes"),
     ("  AMAES @96 under-served (frozen)", "amaes96"),
     ("mmunetvae @64 native (frozen)", "mmunetvae"),
-    ("fomo60k comb_reg @96 native (frozen)", "fomo60k_combined_regular"),
+    ("fomo60k combined_regular (frozen)", "fomo60k_combined_regular"),
+    ("fomo60k contrastive_regular (frozen)", "fomo60k_contrastive_regular"),
+    ("fomo60k combined_modality (frozen)", "fomo60k_combined_modality"),
+    ("fomo60k contrastive_modality (frozen)", "fomo60k_contrastive_modality"),
     ("anatcl @96 native (frozen)", "anatcl"),
     ("triad @96 native (frozen)", "triad"),
+    ("brainiac @96 native (frozen)", "brainiac"),
+    ("simclr3d @96 native (frozen)", "simclr3d"),
+    ("siam @96 native (frozen)", "siam"),
 ]
 
 # Reference: asparagus FINETUNE (not frozen) on the same TEST split, fold 0 (Nima).

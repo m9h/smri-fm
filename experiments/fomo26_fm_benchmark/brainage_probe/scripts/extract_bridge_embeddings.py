@@ -71,6 +71,16 @@ def build_model(arm: str, checkpoint: Path, device: str):
     elif arm == "triad":
         from asparagus_bridge.models_smri_triad import (
             SmriTriadClsRegBackbone as W, convert_triad_checkpoint as conv)
+    elif arm == "brainiac":
+        from asparagus_bridge.models_smri_brainiac import (
+            SmriBrainiacClsRegBackbone as W, convert_brainiac_checkpoint as conv)
+    elif arm == "simclr3d":
+        from asparagus_bridge.models_smri_simclr3d import (
+            SmriSimclr3dClsRegBackbone as W, convert_simclr3d_checkpoint as conv)
+    elif arm == "siam":
+        from asparagus_bridge.models_smri_siam import SmriSiamClsRegBackbone as W
+        from asparagus_bridge.checkpoint import convert_smri_siam_checkpoint as conv
+        # siam's wrapper __init__ reads $SIAM_MODEL_DIR (plans.json/dataset.json)
     else:
         raise ValueError(f"unknown arm {arm!r}")
 
@@ -93,7 +103,8 @@ def build_model(arm: str, checkpoint: Path, device: str):
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("--arm", required=True, choices=["fomo60k", "anatcl", "triad"])
+    p.add_argument("--arm", required=True,
+                   choices=["fomo60k", "anatcl", "triad", "brainiac", "simclr3d", "siam"])
     p.add_argument("--checkpoint", type=Path, required=True)
     p.add_argument("--input_csv", type=Path, required=True)
     p.add_argument("--root_dir", type=Path, required=True)

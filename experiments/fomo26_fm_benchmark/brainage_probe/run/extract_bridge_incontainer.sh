@@ -18,7 +18,7 @@ except Exception: pass
 PY
 echo ">>> install bridge deps (constraint-pinned)"
 pip install -q --no-cache-dir --root-user-action=ignore -c "$CONS" \
-  'monai==1.5.2' einops nibabel scikit-image scikit-learn pandas scipy tqdm 2>&1 | tail -3 || true
+  gardening_tools nnunetv2 'monai==1.5.2' einops nibabel scikit-image scikit-learn pandas scipy tqdm 2>&1 | tail -3 || true
 
 ARM="${ARM:?set ARM}"
 CKPT="${CKPT:?set CKPT}"
