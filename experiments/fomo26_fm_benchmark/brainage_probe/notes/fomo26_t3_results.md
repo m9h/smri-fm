@@ -111,25 +111,53 @@ space, excluded). New asparagus dataset `SEG011_ISLES22_IschStroke` (2 modalitie
 classes), 200/25/25 split. Seg-finetune via the team's pipeline; input conv repeats
 SIAM/mmunetvae's 1-channel stem to 2. Vendored def: `asparagus_seg/SEG011_ISLES22_IschStroke.py`.
 
-## Results (test n=25, lesion Dice)
+**Leakage check (verified, not inferred):** grepped the authoritative FOMO manifests
+(`mri_info.tsv`) — FOMO260K (260,927 scans / 910 source datasets) and FOMO300K
+(306,207 / 915) — for `isles`/`stroke`/`ischem`/`lesion` in every source-dataset name
+and every column: **0 hits in both.** ISLES22 (and the paper's other seg-validation
+tasks ATLAS/WMH/SBM3/Cerebrum-7T) are absent from pretraining → genuinely held out, no
+subject-level leakage. The FMs saw DWI/ADC *extensively* from other sources (modality
+in-distribution) but never these subjects. Contrast: DLBS (`ds004856`, the brain-age
+cohort) **is** in the corpus — so the brain-age memorization caveat is real while ISLES22 is clean.
 
-| Arm | lesion Dice | sens | prec | note |
-|---|---|---|---|---|
-| **siam** (finetuned) | **0.734** | 0.71 | 0.85 | top arm |
-| **mmunetvae** (finetuned) | **0.608** | 0.63 | 0.77 | |
+## Results — 5-fold CV, FM vs from-scratch (the controlled result)
 
-**Reference:** FOMO260K paper AMAES on ISLES22 = **0.740** (3-modality, full challenge protocol).
+Full 5-fold sweep (test n=25/fold), each arm at identical SIAM-nnU-Net-class
+topology / data / 2-modality / 200-epoch protocol. Run on **Modal** (15 A100 jobs
+in parallel, ~2 h, ~$50) after the local GB10 serial run (~30 h) — same code/image.
+
+| Arm | 5-fold mean ± std lesion Dice | per-fold (0–4) |
+|---|---|---|
+| **siam** (SIAM-pretrained) | **0.740 ± 0.015** | .726 .766 .726 .741 .741 |
+| **mmunetvae** (FOMO25-pretrained) | **0.734 ± 0.033** | .761 .753 .670 .735 .749 |
+| **scratch_nnunet** (random init) | **0.667 ± 0.021** | .681 .643 .645 .696 .672 |
+
+**Paired pretraining gain (FM − scratch, same fold):**
+- **siam +0.073** · **mmunetvae +0.066** — **positive on every one of the 5 folds.**
+
+(Supersedes the earlier single-fold local numbers — siam 0.734 / mmunetvae 0.608 fold-0;
+mmunetvae is high-variance, so its 5-fold mean is the reliable figure.)
+
+**Reference — FOMO260K paper, ISLES22:** AMAES 0.740 vs scratch 0.729 (+0.011) —
+but that's **20-shot few-shot, 3-modality, AMAES-ResEnc**, NOT comparable to our
+200-case full-finetune, 2-modality, SIAM-nnU-Net. Our scratch (0.667) is weaker than
+theirs (0.729) — likely the SIAM topology + our training budget + dropping FLAIR — so
+**read our +0.07 as "pretraining vs *this* scratch baseline," internally controlled,
+not as the paper's number.**
 **Team FOMO26 seg leaderboard for context:** SEG009 meningioma **0.0**, SEG010 trigeminal **0.18–0.28**.
 
 ## Read
 
-**This is where the FMs actually work — and they hit published SOTA.** siam reaches
-**Dice 0.734** on stroke-lesion seg, essentially matching the FOMO paper's AMAES (0.740)
-**with only 2 modalities (DWI+ADC) vs the paper's 3.** mmunetvae 0.61. Both vastly exceed
-the team's other FOMO26 seg tasks (meningioma 0.0, trigeminal 0.18) — non-diffusion, tiny.
-The modality-matched, properly-powered (n=25 test) infarct task is the fairest FM test in
-this study, and the FMs pass it decisively. Contrast with the T1 brain-age task, where the
-frozen FMs mostly *lost* to morphometry: FM value is real but task- and modality-dependent.
+**This is the controlled win the brain-age study couldn't give.** With identical
+architecture, data, modalities, and training, **pretraining buys ~+0.07 Dice on
+held-out (leakage-verified, §Leakage check) stroke-lesion segmentation — consistently,
+every fold.** siam 0.740, mmunetvae 0.734, both clearly above scratch 0.667. Both also
+vastly exceed the team's other FOMO26 seg tasks (meningioma 0.0, trigeminal 0.18 —
+non-diffusion, tiny). The modality-matched, properly-powered, *finetuned dense-prediction*
+task is where FM pretraining demonstrably helps — the exact opposite of the T1 brain-age
+*frozen-probe* task, where the FMs mostly lost to a morphometry floor. **FM value is real
+but regime-dependent: it shows up in finetuned, modality-matched, dense tasks, and hides
+in frozen probes of a morphometry-favorable T1 task.**
 
 ## siam inference fix (resolved)
 
@@ -141,11 +169,21 @@ pads each tile up to a multiple of 64 (divisible by SIAM's 64/64/32 and mmunetva
 forwards, crops logits back. Re-ran test-only on the saved `best.ckpt` via a new
 `asparagus/pipeline/run/predict_seg.py` (fit skipped, `TEST_CKPT` env) → Dice 0.734.
 
+## Infra (Modal port)
+
+The 5-fold × 3-arm sweep ran on **Modal** (`scripts/modal_seg_sweep.py`, A100,
+`run_one.starmap`) — 15 parallel jobs, ~2 h / ~$50, vs ~30 h serial on the local
+GB10. Reuses the team's CLS002 Modal scaffold (shared `fomo26-cls002` Volume; only
+the SEG011 cohort + `raw_labels` needed uploading). Has a `--debug` smoke mode for a
+cheap red-green check before paying for the full sweep (the `raw_labels` miss was
+caught and fixed that way). The `seg_inference.py` pad-to-64 fix ships in the image.
+
 ## Remaining
 
-- Encoder-only arms (fomo60k/AMAES/anatcl/triad/simclr3d) need bolt-on seg decoders to
-  join — esp. fomo60k (the frozen brain-age champion): does its lead hold on stroke seg,
-  or is FM quality task-specific (as CLS002 hinted)?
+- **Encoder-only arms (fomo60k/AMAES/anatcl/triad/simclr3d) need bolt-on seg decoders**
+  to join — esp. fomo60k (the frozen brain-age champion): does its lead hold on stroke
+  seg, or is FM quality task-specific (as CLS002 hinted)? This is the next thesis-completing
+  experiment.
 - Optional: add FLAIR via resampling to DWI space (3-modality, full paper protocol).
-- A from-scratch nnU-Net control (the asparagus `scratch_nnunet` arm) to quantify the
-  pretraining gain (paper: AMAES 0.740 vs scratch 0.7286).
+- Optional: a better-tuned scratch baseline (more steps / proper nnU-Net schedule) to test
+  whether the +0.07 gain shrinks against a stronger scratch.

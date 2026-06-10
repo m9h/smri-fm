@@ -1,0 +1,122 @@
+[
+  {
+    "arm": "smri_siam",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_siam_isles22_fold0",
+    "lesion_dice": 0.7256,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_siam",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_siam_isles22_fold1",
+    "lesion_dice": 0.7663,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_siam",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_siam_isles22_fold2",
+    "lesion_dice": 0.7255,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_siam",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_siam_isles22_fold3",
+    "lesion_dice": 0.7409,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_siam",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_siam_isles22_fold4",
+    "lesion_dice": 0.7406,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_mmunetvae",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_mmunetvae_isles22_fold0",
+    "lesion_dice": 0.7609,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_mmunetvae",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_mmunetvae_isles22_fold1",
+    "lesion_dice": 0.7531,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_mmunetvae",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_mmunetvae_isles22_fold2",
+    "lesion_dice": 0.6699,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_mmunetvae",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_mmunetvae_isles22_fold3",
+    "lesion_dice": 0.7348,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_mmunetvae",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_mmunetvae_isles22_fold4",
+    "lesion_dice": 0.7489,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_nnunet",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_nnunet_isles22_fold0",
+    "lesion_dice": 0.6808,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_nnunet",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_nnunet_isles22_fold1",
+    "lesion_dice": 0.6427,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_nnunet",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_nnunet_isles22_fold2",
+    "lesion_dice": 0.6448,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_nnunet",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_nnunet_isles22_fold3",
+    "lesion_dice": 0.6956,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_nnunet",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_nnunet_isles22_fold4",
+    "lesion_dice": 0.672,
+    "stderr_tail": ""
+  }
+]
