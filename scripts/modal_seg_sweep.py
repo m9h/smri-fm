@@ -85,6 +85,11 @@ def run_one(arm: str, fold: int, debug: int = 0) -> dict:
             from asparagus_bridge.models_smri_mmunetvae import convert_mmunetvae_checkpoint
             ckpt = "/tmp/mmunetvae_seg.ckpt"
             convert_mmunetvae_checkpoint("/fomo26/weights/mmunetvae/fomo25_mmunetvae_pretrained.ckpt", ckpt)
+        elif arm == "smri_fomo60k":
+            from asparagus_bridge.models_smri_fomo60k import convert_fomo60k_checkpoint
+            ckpt = "/tmp/fomo60k_seg.ckpt"
+            convert_fomo60k_checkpoint(
+                "/fomo26/weights/fomo60k_pkoutsouvelis/combined_regular-step=200000.ckpt", ckpt)
         elif arm == "scratch_nnunet":
             ckpt = None
         else:

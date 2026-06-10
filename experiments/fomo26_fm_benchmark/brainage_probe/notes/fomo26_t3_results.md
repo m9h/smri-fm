@@ -169,6 +169,35 @@ pads each tile up to a multiple of 64 (divisible by SIAM's 64/64/32 and mmunetva
 forwards, crops logits back. Re-ran test-only on the saved `best.ckpt` via a new
 `asparagus/pipeline/run/predict_seg.py` (fit skipped, `TEST_CKPT` env) → Dice 0.734.
 
+## The frozen↔finetune dissociation — RESOLVED (fomo60k bolt-on decoder)
+
+Added a seg decoder to fomo60k (the frozen brain-age champion) via a re-parented
+MONAI **SwinUNETR** — `SmriFomo60kSegBackbone` (Swin = `self.encoder` so the existing
+`convert_fomo60k_checkpoint` loads; UNETR decoder under `self.decoder` for asparagus's
+encoder/decoder LR split). Validated with a red-green smoke (two ~$0.20 iterations:
+caught the optimizer encoder/decoder-name split), then 5-fold on Modal.
+
+**fomo60k seg: 0.754 ± 0.047** — completing the cross-task comparison:
+
+| Arm | Frozen brain-age CV MAE (↓) | Finetuned ISLES22 seg Dice (↑) |
+|---|---|---|
+| fomo60k | **5.61** (best, beat the morphometry floor) | **0.754 ± 0.047** |
+| siam | **10.01** (worst — dead frozen features) | 0.740 ± 0.015 |
+| mmunetvae | 8.26 | 0.734 ± 0.033 |
+| scratch | — | 0.667 ± 0.021 |
+
+**Finding — the dissociation is real, but it's "the spread collapses," not "the rank inverts":**
+- Frozen probe spreads the FMs **4.4 yr** apart (fomo60k 5.61 → siam 10.01).
+- Finetuned seg **collapses them to a tie (~0.74, all within each other's std)**, all +0.07 over scratch.
+- **siam is the smoking gun:** *worst* frozen (near-useless dead features) yet *tied-for-best* finetuned → **finetuning fully rescues a backbone the frozen probe wrote off.**
+
+→ **Frozen linear-probe rankings do not predict finetuned-task performance.** fomo60k tops both (a genuinely strong backbone), but the frozen probe's *discrimination* between FMs vanishes under finetuning. **Practical takeaway: don't reject a foundation model on a frozen probe — finetuning equalizes them.**
+
+**Caveat:** decoders differ per arm (fomo60k SwinUNETR vs siam/mmunetvae nnU-Net), so the
+small FM-vs-FM gaps aren't clean *encoder* comparisons; a uniform shared decoder would be
+needed to rank encoders precisely. But the qualitative result is decoder-robust: all three
+FMs cluster ~0.74, all ≫ scratch, and siam is rescued from worst-frozen to tied-best-finetuned.
+
 ## Infra (Modal port)
 
 The 5-fold × 3-arm sweep ran on **Modal** (`scripts/modal_seg_sweep.py`, A100,

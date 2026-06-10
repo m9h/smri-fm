@@ -118,5 +118,45 @@
     "rundir": "/fomo26/models/seg_scratch_nnunet_isles22_fold4",
     "lesion_dice": 0.672,
     "stderr_tail": ""
+  },
+  {
+    "arm": "smri_fomo60k",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_isles22_fold0",
+    "lesion_dice": 0.7744,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_fomo60k",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_isles22_fold1",
+    "lesion_dice": 0.7618,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_fomo60k",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_isles22_fold2",
+    "lesion_dice": 0.6708,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_fomo60k",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_isles22_fold3",
+    "lesion_dice": 0.7522,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_fomo60k",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_isles22_fold4",
+    "lesion_dice": 0.8134,
+    "stderr_tail": ""
   }
 ]

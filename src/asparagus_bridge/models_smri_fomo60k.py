@@ -118,3 +118,62 @@ def convert_fomo60k_checkpoint(src_path, dst_path) -> None:
     epoch = ckpt.get("epoch") if isinstance(ckpt, dict) else None
     dst_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": state_dict, "epoch": epoch}, dst_path)
+
+
+# ---------------------------------------------------------------------------
+# Segmentation: bolt the pretrained FOMO60K Swin encoder onto a MONAI SwinUNETR
+# decoder. The encoder is SwinUNETR.swinViT (a bare SwinTransformer, same class
+# as our ClsReg encoder), so the seg converter emits the encoder weights under
+# `model.net.swinViT.*`; asparagus strips the leading `model.` and load_state_dict
+# (strict=False) lands them in self.net.swinViT, leaving the decoder fresh.
+# ---------------------------------------------------------------------------
+from .seg_inference import SlidingWindowSegMixin  # noqa: E402
+
+
+class SmriFomo60kSegBackbone(SlidingWindowSegMixin, nn.Module):
+    """FOMO60K SwinV2 encoder + MONAI SwinUNETR decoder for asparagus seg.
+
+    Re-parents a MONAI SwinUNETR: its Swin becomes `self.encoder` (so the existing
+    `convert_fomo60k_checkpoint`'s `model.encoder.*` keys load straight in — same
+    SwinTransformer class), and the UNETR decoder blocks live under `self.decoder`.
+    asparagus's encoder/decoder LR split + decoder-warmup key off the `model.encoder`
+    / `model.decoder` name prefixes, so this naming is what makes finetune work.
+    forward() mirrors MONAI SwinUNETR.forward exactly; reuses MONAI's blocks so the
+    channel wiring is version-correct rather than hardcoded.
+    """
+
+    stem_weight_name = "encoder.patch_embed.proj.weight"  # 1->n channel stem repeat
+
+    def __init__(self, input_channels, output_channels, dimensions="3D",
+                 deep_supervision=False, **_ignored):
+        super().__init__()
+        assert dimensions == "3D", f"only 3D supported, got dimensions={dimensions}"
+        self.num_classes = output_channels
+        from monai.networks.nets import SwinUNETR
+        sw = SwinUNETR(
+            in_channels=input_channels, out_channels=output_channels,
+            feature_size=FEATURE_SIZE, depths=DEPTHS, num_heads=NUM_HEADS,
+            spatial_dims=3, use_v2=True, downsample="merging",
+        )
+        self.encoder = sw.swinViT  # convert_fomo60k_checkpoint's model.encoder.* lands here
+        self.decoder = nn.ModuleDict({
+            "encoder1": sw.encoder1, "encoder2": sw.encoder2, "encoder3": sw.encoder3,
+            "encoder4": sw.encoder4, "encoder10": sw.encoder10,
+            "decoder5": sw.decoder5, "decoder4": sw.decoder4, "decoder3": sw.decoder3,
+            "decoder2": sw.decoder2, "decoder1": sw.decoder1, "out": sw.out,
+        })  # sw is discarded; modules are now registered only under encoder/decoder
+
+    def forward(self, x: Tensor) -> Tensor:
+        hs = self.encoder(x, normalize=True)
+        d = self.decoder
+        enc0 = d["encoder1"](x)
+        enc1 = d["encoder2"](hs[0])
+        enc2 = d["encoder3"](hs[1])
+        enc3 = d["encoder4"](hs[2])
+        dec4 = d["encoder10"](hs[4])
+        dec3 = d["decoder5"](dec4, hs[3])
+        dec2 = d["decoder4"](dec3, enc3)
+        dec1 = d["decoder3"](dec2, enc2)
+        dec0 = d["decoder2"](dec1, enc1)
+        out = d["decoder1"](dec0, enc0)
+        return d["out"](out)
