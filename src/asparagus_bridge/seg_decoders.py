@@ -52,3 +52,47 @@ class ResNetUNetDecoder(nn.Module):
         if x.shape[2:] != full_shape:
             x = F.interpolate(x, size=full_shape, mode="trilinear", align_corners=False)
         return self.out(x)
+
+
+# ---------------------------------------------------------------------------
+# Uniform decoder: hold the decoder body byte-identical across encoders so the
+# seg comparison reflects the ENCODER, not the decoder. Each encoder's 5-level
+# pyramid (/2,/4,/8,/16,/32 — Swin and ResNet-18 both produce this) is passed
+# through thin 1x1 channel adapters to a fixed common scheme, then the SAME
+# ResNetUNetDecoder body. Only the adapters (minimal 1x1 capacity) differ by arm.
+# ---------------------------------------------------------------------------
+from .seg_inference import SlidingWindowSegMixin  # noqa: E402
+
+_COMMON_CH = [64, 64, 128, 256, 512]  # decoder-body input channels, identical for every arm
+
+
+class UniformUNetDecoder(nn.Module):
+    def __init__(self, encoder_channels, out_channels: int):
+        super().__init__()
+        assert len(encoder_channels) == 5
+        self.adapters = nn.ModuleList(
+            nn.Conv3d(ec, cc, kernel_size=1) for ec, cc in zip(encoder_channels, _COMMON_CH)
+        )
+        self.body = ResNetUNetDecoder(out_channels)  # the shared decoder body
+
+    def forward(self, pyramid, full_shape):
+        adapted = [a(f) for a, f in zip(self.adapters, pyramid)]
+        return self.body(adapted, full_shape)
+
+
+class UniformSegBackbone(SlidingWindowSegMixin, nn.Module):
+    """Generic FM-encoder + uniform decoder. Subclasses build self.encoder, set
+    pyramid_channels + stem_weight_name, and implement _pyramid(x)->[s0..s4]."""
+
+    pyramid_channels: list = []  # set by subclass
+
+    def __init__(self, output_channels: int):
+        super().__init__()
+        self.num_classes = output_channels
+        self.decoder = UniformUNetDecoder(self.pyramid_channels, output_channels)
+
+    def _pyramid(self, x):  # -> [s0(/2), s1(/4), s2(/8), s3(/16), s4(/32)]
+        raise NotImplementedError
+
+    def forward(self, x):
+        return self.decoder(self._pyramid(x), x.shape[2:])

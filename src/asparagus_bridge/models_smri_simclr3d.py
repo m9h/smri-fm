@@ -110,3 +110,23 @@ class SmriSimclr3dSegBackbone(SlidingWindowSegMixin, nn.Module):
         s3 = e.layer3(s2)                # /16, 256
         s4 = e.layer4(s3)                # /32, 512
         return self.decoder([s0, s1, s2, s3, s4], x.shape[2:])
+
+
+from .seg_decoders import UniformSegBackbone  # noqa: E402
+
+
+class SmriSimclr3dUniformSegBackbone(UniformSegBackbone):
+    """SimCLR3D ResNet-18 (MONAI) encoder + shared uniform decoder."""
+    stem_weight_name = "encoder.conv1.weight"
+    pyramid_channels = [64, 64, 128, 256, 512]
+
+    def __init__(self, input_channels, output_channels, dimensions="3D", deep_supervision=False, **_ignored):
+        assert dimensions == "3D"
+        super().__init__(output_channels)
+        self.encoder = _build_simclr3d_encoder(in_channels=input_channels)
+
+    def _pyramid(self, x):
+        e = self.encoder
+        s0 = e.act(e.bn1(e.conv1(x))); s1 = e.layer1(e.maxpool(s0))
+        s2 = e.layer2(s1); s3 = e.layer3(s2); s4 = e.layer4(s3)
+        return [s0, s1, s2, s3, s4]

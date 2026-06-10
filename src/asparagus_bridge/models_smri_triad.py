@@ -138,3 +138,20 @@ class SmriTriadSegBackbone(SlidingWindowSegMixin, nn.Module):
         dec1 = d["decoder3"](dec2, enc2); dec0 = d["decoder2"](dec1, enc1)
         out = d["decoder1"](dec0, enc0)
         return d["out"](out)
+
+
+from .seg_decoders import UniformSegBackbone  # noqa: E402
+
+
+class SmriTriadUniformSegBackbone(UniformSegBackbone):
+    """Triad Swin encoder + shared uniform decoder."""
+    stem_weight_name = "encoder.patch_embed.proj.weight"
+    pyramid_channels = [FEATURE_SIZE, FEATURE_SIZE * 2, FEATURE_SIZE * 4, FEATURE_SIZE * 8, FEATURE_SIZE * 16]
+
+    def __init__(self, input_channels, output_channels, dimensions="3D", deep_supervision=False, **_ignored):
+        assert dimensions == "3D"
+        super().__init__(output_channels)
+        self.encoder = _build_triad_encoder(in_channels=input_channels)
+
+    def _pyramid(self, x):
+        return list(self.encoder(x, normalize=True))[:5]

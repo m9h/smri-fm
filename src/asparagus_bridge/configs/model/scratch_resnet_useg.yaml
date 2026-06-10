@@ -1,0 +1,20 @@
+# @package model
+# Scratch (random-init) ResNet-18 encoder + the SHARED uniform decoder body.
+# Same ResNet-18 arch as smri_anatcl_useg / smri_simclr3d_useg, but NO pretrained
+# checkpoint (modal_seg_sweep maps base=scratch_resnet -> ckpt=None). The
+# decoder-controlled floor for the ResNet FM arms: any FM-vs-this gap is the
+# encoder's *pretraining*, since encoder arch + decoder body are byte-identical.
+
+dimensions: 3D
+deep_supervision: False
+
+seg_net: scratch_resnet
+
+_seg_net:
+  _target_: asparagus_bridge.models_smri_anatcl.SmriAnatclUniformSegBackbone
+  dimensions: ${model.dimensions}
+  deep_supervision: ${model.deep_supervision}
+
+finetune_optim: AdamW
+finetune_lr: 1e-4
+weight_decay: 3e-5

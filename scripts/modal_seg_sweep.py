@@ -75,35 +75,40 @@ def run_one(arm: str, fold: int, debug: int = 0) -> dict:
     for k in ("ASPARAGUS_MODELS", "ASPARAGUS_RESULTS", "ASPARAGUS_RAW_LABELS"):
         os.makedirs(env[k], exist_ok=True)
 
-    # checkpoint conversion (scratch = random init, no ckpt)
+    # checkpoint conversion (scratch = random init, no ckpt).
+    # `_useg` arms reuse the BASE arm's converter (same encoder) with the uniform-decoder
+    # +model config; scratch_*_useg = random encoder + uniform decoder (ckpt=None).
+    base = arm[: -len("_useg")] if arm.endswith("_useg") else arm
     ckpt = None
     try:
-        if arm == "smri_siam":
+        if base in ("scratch_resnet", "scratch_swin"):
+            ckpt = None  # uniform-decoder from-scratch baselines
+        elif base == "smri_siam":
             from asparagus_bridge.checkpoint import convert_checkpoint
             ckpt = "/tmp/siam_seg.ckpt"
             convert_checkpoint("smri_siam", f"{SIAM_MODEL_DIR}/fold_0/checkpoint_final.pth", ckpt)
-        elif arm == "smri_mmunetvae":
+        elif base == "smri_mmunetvae":
             from asparagus_bridge.models_smri_mmunetvae import convert_mmunetvae_checkpoint
             ckpt = "/tmp/mmunetvae_seg.ckpt"
             convert_mmunetvae_checkpoint("/fomo26/weights/mmunetvae/fomo25_mmunetvae_pretrained.ckpt", ckpt)
-        elif arm == "smri_fomo60k":
+        elif base == "smri_fomo60k":
             from asparagus_bridge.models_smri_fomo60k import convert_fomo60k_checkpoint
             ckpt = "/tmp/fomo60k_seg.ckpt"
             convert_fomo60k_checkpoint(
                 "/fomo26/weights/fomo60k_pkoutsouvelis/combined_regular-step=200000.ckpt", ckpt)
-        elif arm == "smri_triad":
+        elif base == "smri_triad":
             from asparagus_bridge.models_smri_triad import convert_triad_checkpoint
             ckpt = "/tmp/triad_seg.ckpt"
             convert_triad_checkpoint("/fomo26/weights/triad/Triad-SwinB-MAE.pth", ckpt)
-        elif arm == "smri_anatcl":
+        elif base == "smri_anatcl":
             from asparagus_bridge.models_smri_anatcl import convert_anatcl_checkpoint
             ckpt = "/tmp/anatcl_seg.ckpt"
             convert_anatcl_checkpoint("/fomo26/weights/anatcl/anatcl_global_fold0.pth", ckpt)
-        elif arm == "smri_simclr3d":
+        elif base == "smri_simclr3d":
             from asparagus_bridge.models_smri_simclr3d import convert_simclr3d_checkpoint
             ckpt = "/tmp/simclr3d_seg.ckpt"
             convert_simclr3d_checkpoint("/fomo26/weights/simclr3d/simclr_3d_brain_foundation.tar", ckpt)
-        elif arm == "scratch_nnunet":
+        elif base == "scratch_nnunet":
             ckpt = None
         else:
             raise ValueError(f"unsupported seg arm {arm}")
@@ -124,7 +129,7 @@ def run_one(arm: str, fold: int, debug: int = 0) -> dict:
                 "training.train_batches_per_epoch_per_device=5", "training.val_batches_per_epoch_per_device=3",
                 "training.warmup_epochs=1", "training.decoder_warmup_epochs=1", "training.check_val_every_n_epoch=1"]
     else:
-        bs = 1 if arm == "smri_simclr3d" else 2  # MONAI resnet18 stem keeps larger maps -> OOM at bs2
+        bs = 1 if "simclr3d" in base else 2  # MONAI resnet18 stem keeps larger maps -> OOM at bs2
         cmd += ["training.epochs=200", "training.patch_size=[128,128,128]", f"training.batch_size={bs}",
                 "training.train_batches_per_epoch_per_device=50", "training.val_batches_per_epoch_per_device=20",
                 "training.warmup_epochs=10", "training.decoder_warmup_epochs=10", "training.check_val_every_n_epoch=5"]
@@ -141,7 +146,8 @@ def run_one(arm: str, fold: int, debug: int = 0) -> dict:
 
 
 @app.local_entrypoint()
-def main(arms: str = "", folds: str = "", debug: int = 0):
+def main(arms: str = "", folds: str = "", debug: int = 0,
+         out: str = "/tmp/isles22_seg_modal_results.json"):
     A = arms.split(",") if arms else ALL_ARMS
     F = [int(x) for x in folds.split(",")] if folds else ALL_FOLDS
     jobs = [(a, f, debug) for a in A for f in F]
@@ -172,5 +178,5 @@ def main(arms: str = "", folds: str = "", debug: int = 0):
         for arm, m in means.items():
             if arm != "scratch_nnunet":
                 print(f"  {arm:16s} {m - sc:+.4f}")
-    json.dump(results, open("/tmp/isles22_seg_modal_results.json", "w"), indent=2)
-    print("\n>>> wrote /tmp/isles22_seg_modal_results.json")
+    json.dump(results, open(out, "w"), indent=2)
+    print(f"\n>>> wrote {out}")

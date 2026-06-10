@@ -1,0 +1,242 @@
+[
+  {
+    "arm": "smri_fomo60k_useg",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_useg_isles22_fold0",
+    "lesion_dice": 0.6567,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_fomo60k_useg",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_useg_isles22_fold1",
+    "lesion_dice": 0.638,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_fomo60k_useg",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_useg_isles22_fold2",
+    "lesion_dice": 0.5963,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_fomo60k_useg",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_useg_isles22_fold3",
+    "lesion_dice": 0.6542,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_fomo60k_useg",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_fomo60k_useg_isles22_fold4",
+    "lesion_dice": 0.6594,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad_useg",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_useg_isles22_fold0",
+    "lesion_dice": 0.5992,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad_useg",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_useg_isles22_fold1",
+    "lesion_dice": 0.614,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad_useg",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_useg_isles22_fold2",
+    "lesion_dice": 0.5926,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad_useg",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_useg_isles22_fold3",
+    "lesion_dice": 0.5609,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad_useg",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_useg_isles22_fold4",
+    "lesion_dice": 0.5824,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl_useg",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_useg_isles22_fold0",
+    "lesion_dice": 0.6304,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl_useg",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_useg_isles22_fold1",
+    "lesion_dice": 0.6286,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl_useg",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_useg_isles22_fold2",
+    "lesion_dice": 0.6389,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl_useg",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_useg_isles22_fold3",
+    "lesion_dice": 0.6165,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl_useg",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_useg_isles22_fold4",
+    "lesion_dice": 0.6087,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d_useg",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_useg_isles22_fold0",
+    "lesion_dice": 0.7003,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d_useg",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_useg_isles22_fold1",
+    "lesion_dice": 0.5892,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d_useg",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_useg_isles22_fold2",
+    "lesion_dice": 0.6057,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d_useg",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_useg_isles22_fold3",
+    "lesion_dice": 0.6759,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d_useg",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_useg_isles22_fold4",
+    "lesion_dice": 0.5882,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_swin_useg",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_swin_useg_isles22_fold0",
+    "lesion_dice": 0.6291,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_swin_useg",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_swin_useg_isles22_fold1",
+    "lesion_dice": 0.5738,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_swin_useg",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_swin_useg_isles22_fold2",
+    "lesion_dice": 0.6087,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_swin_useg",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_swin_useg_isles22_fold3",
+    "lesion_dice": 0.606,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_swin_useg",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_swin_useg_isles22_fold4",
+    "lesion_dice": 0.62,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_resnet_useg",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_resnet_useg_isles22_fold0",
+    "lesion_dice": 0.6159,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_resnet_useg",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_resnet_useg_isles22_fold1",
+    "lesion_dice": 0.6138,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_resnet_useg",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_resnet_useg_isles22_fold2",
+    "lesion_dice": 0.6147,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_resnet_useg",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_resnet_useg_isles22_fold3",
+    "lesion_dice": 0.6328,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "scratch_resnet_useg",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_scratch_resnet_useg_isles22_fold4",
+    "lesion_dice": 0.624,
+    "stderr_tail": ""
+  }
+]

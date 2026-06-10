@@ -207,12 +207,58 @@ contrastive arms (anatcl, simclr3d) are weakest on seg despite simclr3d's strong
 ResNet→our ResNet-UNet, siam/mmunetvae/scratch→nnU-Net. So the seg numbers mix encoder +
 decoder; the ResNet arms' weakness (anatcl/simclr3d ≤ scratch) may be partly the simpler
 ResNet-UNet decoder, not the encoder. A **uniform decoder** is needed to rank encoders
-cleanly (follow-on). What survives the confound: (a) multiple pretrained FMs beat random
-init on held-out stroke seg; (b) the frozen↔seg decoupling — *siam is worst-frozen yet
-+0.07 over scratch on the identical nnU-Net decoder*, which no decoder confound explains.
+cleanly — **done; see the "Uniform decoder" section below.** It confirms the confound is
+*large*: hold the decoder fixed and the spread collapses 0.15→0.05, the ranking reorders,
+and the decoder-controlled encoder-pretraining gain is ≤+0.03. What survives regardless:
+(a) the frozen↔seg decoupling — *siam is worst-frozen yet +0.07 over scratch on the
+identical nnU-Net decoder*, which no decoder confound explains.
 
 → **Bottom line: frozen linear-probe rankings are an unreliable proxy for finetuned-task
 utility.** Don't select or reject a foundation model on a frozen probe.
+
+## Uniform decoder — RESOLVED the decoder confound (the +0.07 is mostly the decoder)
+
+The cross-arm seg ranking above mixes encoder + decoder. To isolate the **encoder**, we
+re-ran the 4 encoder-only arms through a **byte-identical decoder**: each encoder's
+5-level pyramid (/2…/32; Swin and ResNet-18 both produce this) → thin 1×1 channel
+adapters → the *same* U-Net body (`UniformUNetDecoder` / `UniformSegBackbone` in
+`seg_decoders.py`; per-arm `*UniformSegBackbone`; `*_useg.yaml`). Added two
+**decoder-controlled scratch floors** (`scratch_swin_useg`, `scratch_resnet_useg` =
+random-init Swin / ResNet-18 through the same decoder), so FM-vs-scratch differs *only*
+in pretrained-vs-random encoder weights. 4 FM + 2 scratch × 5-fold on Modal (red-green
+smoke first: 4/4 + 2/2 OK). Results: `results/isles22_seg_uniform_decoder_5fold_modal.json`.
+
+| Arm | Encoder | **Uniform Dice** | Native-decoder Dice |
+|---|---|---|---|
+| fomo60k | Swin-MAE | **0.641 ± 0.024** | 0.754 (SwinUNETR) |
+| simclr3d | ResNet-18 | 0.632 ± 0.047 | 0.678 (ResNet-UNet) |
+| anatcl | ResNet-18 | 0.625 ± 0.011 | 0.617 (ResNet-UNet) |
+| **scratch (ResNet-18)** | random | **0.620 ± 0.007** | — |
+| **scratch (Swin)** | random | **0.608 ± 0.019** | — |
+| triad | Swin-MAE | 0.590 ± 0.018 | 0.763 (SwinUNETR) |
+
+**Decoder-controlled pretraining gain (paired, same arch + same decoder):**
+fomo60k **+0.033** (4/5) · triad **−0.018** (1/5) · simclr3d +0.012 (2/5) · anatcl +0.004 (3/5).
+
+- **Cross-arm spread collapses ~0.15 → ~0.05; ranking reorders.** Triad: SwinUNETR
+  *winner* (0.763) → *worst* on the shared decoder (0.590, below its own scratch). Swin
+  arms shed 0.11–0.17 losing SwinUNETR; ResNet arms barely move. **Most of the Part-2
+  cross-arm signal was the decoder.**
+- **Decoder-controlled encoder-pretraining gain is ≤ +0.03** — only **fomo60k** is
+  real (+0.033, 4/5); the rest are within noise or **negative** (triad). The "+0.07–0.10"
+  was inflated by the decoder swap + a weak nnU-Net scratch (0.667); the matched-arch
+  scratch here is **0.61–0.62**, much closer to the FMs.
+- **fomo60k transfers on both probes** (frozen brain-age champion + only positive
+  decoder-controlled seg gain); **triad is the opposite** (SwinUNETR winner, frozen-mediocre,
+  decoder-controlled-negative) → triad's strength was the encoder+decoder *pairing*.
+- *Caveat:* the uniform decoder is **lighter** than SwinUNETR (Swin Dice 0.75→0.59–0.64),
+  so it may under-exploit a strong encoder — a higher-capacity shared decoder is the
+  natural next test. The matched-arch FM-vs-scratch contrast is still clean.
+
+→ **Bottom line (updated): the finetuned cross-arm seg ranking is mostly a *decoder*
+ranking; with the decoder held fixed, encoder pretraining buys ≤ +0.03 Dice and only for
+fomo60k.** The headline FM "wins" on ISLES22 come from the decoder you bolt on and from a
+weak baseline, not from the encoder.
 
 ## Infra (Modal port)
 
@@ -225,10 +271,11 @@ caught and fixed that way). The `seg_inference.py` pad-to-64 fix ships in the im
 
 ## Remaining
 
-- **Encoder-only arms (fomo60k/AMAES/anatcl/triad/simclr3d) need bolt-on seg decoders**
-  to join — esp. fomo60k (the frozen brain-age champion): does its lead hold on stroke
-  seg, or is FM quality task-specific (as CLS002 hinted)? This is the next thesis-completing
-  experiment.
+- **Higher-capacity shared decoder** (e.g. a SwinUNETR-class body on the same 1×1
+  adapters) to probe the uniform-decoder caveat — does fomo60k's +0.03 grow and the
+  others stay flat when the shared decoder can actually exploit a strong encoder?
+- Add **brainiac** (UNETR @ 96³, matched patch) — deferred (ViT-96/UNETR fixed-size vs
+  128 sliding window).
 - Optional: add FLAIR via resampling to DWI space (3-modality, full paper protocol).
-- Optional: a better-tuned scratch baseline (more steps / proper nnU-Net schedule) to test
-  whether the +0.07 gain shrinks against a stronger scratch.
+- *Done:* bolt-on decoders for all encoder-only arms (fomo60k/anatcl/triad/simclr3d);
+  the uniform-decoder follow-on (matched-arch scratch shows the +0.07 was mostly decoder).
