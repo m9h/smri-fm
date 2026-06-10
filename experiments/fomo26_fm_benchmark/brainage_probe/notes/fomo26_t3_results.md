@@ -177,26 +177,42 @@ MONAI **SwinUNETR** — `SmriFomo60kSegBackbone` (Swin = `self.encoder` so the e
 encoder/decoder LR split). Validated with a red-green smoke (two ~$0.20 iterations:
 caught the optimizer encoder/decoder-name split), then 5-fold on Modal.
 
-**fomo60k seg: 0.754 ± 0.047** — completing the cross-task comparison:
+Full 6-FM roster (+ scratch) on ISLES22 seg, 5-fold, vs the frozen brain-age probe:
 
-| Arm | Frozen brain-age CV MAE (↓) | Finetuned ISLES22 seg Dice (↑) |
-|---|---|---|
-| fomo60k | **5.61** (best, beat the morphometry floor) | **0.754 ± 0.047** |
-| siam | **10.01** (worst — dead frozen features) | 0.740 ± 0.015 |
-| mmunetvae | 8.26 | 0.734 ± 0.033 |
-| scratch | — | 0.667 ± 0.021 |
+| Arm | Frozen brain-age CV MAE (↓, rank) | Finetuned seg Dice (↑, rank) | vs scratch |
+|---|---|---|---|
+| triad (Swin) | 7.43 (3) | **0.763 ± 0.012** (1) | +0.10 |
+| fomo60k (Swin) | **5.61 (1, best)** | 0.754 ± 0.047 (2) | +0.09 |
+| siam (nnU-Net) | **10.01 (6, worst)** | 0.740 ± 0.015 (3) | +0.07 |
+| mmunetvae | 8.26 (4) | 0.734 ± 0.033 (4) | +0.07 |
+| simclr3d (ResNet) | 6.23 (2) | 0.678 ± 0.025 (5) | +0.01 |
+| scratch (nnU-Net) | — | 0.667 ± 0.021 | — |
+| anatcl (ResNet) | 8.60 (5) | 0.617 ± 0.010 (6) | **−0.05** |
 
-**Finding — the dissociation is real, but it's "the spread collapses," not "the rank inverts":**
-- Frozen probe spreads the FMs **4.4 yr** apart (fomo60k 5.61 → siam 10.01).
-- Finetuned seg **collapses them to a tie (~0.74, all within each other's std)**, all +0.07 over scratch.
-- **siam is the smoking gun:** *worst* frozen (near-useless dead features) yet *tied-for-best* finetuned → **finetuning fully rescues a backbone the frozen probe wrote off.**
+(brainiac deferred: ViT-96³ + UNETR fixed-size conflicts with the 128³ sliding window.)
 
-→ **Frozen linear-probe rankings do not predict finetuned-task performance.** fomo60k tops both (a genuinely strong backbone), but the frozen probe's *discrimination* between FMs vanishes under finetuning. **Practical takeaway: don't reject a foundation model on a frozen probe — finetuning equalizes them.**
+**Finding — frozen-probe rank does NOT predict finetuned-seg rank** (Spearman ρ ≈ **0.31**,
+n=6, not significant). The two big dissociations:
+- **siam: worst frozen (6th, dead features) → 3rd on seg.** Finetuning fully rescues it —
+  and this is *clean*: siam uses the **same nnU-Net decoder as scratch**, yet beats it +0.07.
+- **simclr3d: 2nd-best frozen → 5th on seg** (~tied with scratch). The frozen probe over-rated it.
 
-**Caveat:** decoders differ per arm (fomo60k SwinUNETR vs siam/mmunetvae nnU-Net), so the
-small FM-vs-FM gaps aren't clean *encoder* comparisons; a uniform shared decoder would be
-needed to rank encoders precisely. But the qualitative result is decoder-robust: all three
-FMs cluster ~0.74, all ≫ scratch, and siam is rescued from worst-frozen to tied-best-finetuned.
+**Pretraining helps for most backbones but not all:** triad/fomo60k/siam/mmunetvae clearly
+beat scratch (+0.07–0.10); simclr3d ties it; **anatcl is BELOW scratch (−0.05)** — a real
+caution that **a foundation model is not automatically better than random init, even
+finetuned.** The transformer-MAE backbones (triad, fomo60k) are the most robust; the ResNet
+contrastive arms (anatcl, simclr3d) are weakest on seg despite simclr3d's strong frozen probe.
+
+**Caveat (limits the cross-arm seg *ranking*):** decoders differ by arm — Swin→SwinUNETR,
+ResNet→our ResNet-UNet, siam/mmunetvae/scratch→nnU-Net. So the seg numbers mix encoder +
+decoder; the ResNet arms' weakness (anatcl/simclr3d ≤ scratch) may be partly the simpler
+ResNet-UNet decoder, not the encoder. A **uniform decoder** is needed to rank encoders
+cleanly (follow-on). What survives the confound: (a) multiple pretrained FMs beat random
+init on held-out stroke seg; (b) the frozen↔seg decoupling — *siam is worst-frozen yet
++0.07 over scratch on the identical nnU-Net decoder*, which no decoder confound explains.
+
+→ **Bottom line: frozen linear-probe rankings are an unreliable proxy for finetuned-task
+utility.** Don't select or reject a foundation model on a frozen probe.
 
 ## Infra (Modal port)
 

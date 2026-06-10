@@ -61,6 +61,7 @@ def _setenv() -> dict:
         SIAM_MODEL_DIR=SIAM_MODEL_DIR,
         PYTHONPATH=f"{repo}/third_party/asparagus:{repo}/src",
         WANDB_MODE="offline", WANDB_DISABLED="true", HYDRA_FULL_ERROR="1",
+        PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True",  # reduce fragmentation OOM
     )
     return env
 
@@ -123,7 +124,8 @@ def run_one(arm: str, fold: int, debug: int = 0) -> dict:
                 "training.train_batches_per_epoch_per_device=5", "training.val_batches_per_epoch_per_device=3",
                 "training.warmup_epochs=1", "training.decoder_warmup_epochs=1", "training.check_val_every_n_epoch=1"]
     else:
-        cmd += ["training.epochs=200", "training.patch_size=[128,128,128]", "training.batch_size=2",
+        bs = 1 if arm == "smri_simclr3d" else 2  # MONAI resnet18 stem keeps larger maps -> OOM at bs2
+        cmd += ["training.epochs=200", "training.patch_size=[128,128,128]", f"training.batch_size={bs}",
                 "training.train_batches_per_epoch_per_device=50", "training.val_batches_per_epoch_per_device=20",
                 "training.warmup_epochs=10", "training.decoder_warmup_epochs=10", "training.check_val_every_n_epoch=5"]
     cmd += ["hardware.num_workers=8", "logger.wandb_logging=False", f"hydra.run.dir={rundir}"]

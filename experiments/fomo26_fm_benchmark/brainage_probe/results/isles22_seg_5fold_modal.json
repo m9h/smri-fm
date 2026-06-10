@@ -158,5 +158,125 @@
     "rundir": "/fomo26/models/seg_fomo60k_isles22_fold4",
     "lesion_dice": 0.8134,
     "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_isles22_fold0",
+    "lesion_dice": 0.7631,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_isles22_fold1",
+    "lesion_dice": 0.7569,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_isles22_fold2",
+    "lesion_dice": 0.7648,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_isles22_fold3",
+    "lesion_dice": 0.7472,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_triad",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_triad_isles22_fold4",
+    "lesion_dice": 0.7848,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_isles22_fold0",
+    "lesion_dice": 0.603,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_isles22_fold1",
+    "lesion_dice": 0.609,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_isles22_fold2",
+    "lesion_dice": 0.6309,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_isles22_fold3",
+    "lesion_dice": 0.6192,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_anatcl",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_anatcl_isles22_fold4",
+    "lesion_dice": 0.6206,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d",
+    "fold": 0,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_isles22_fold0",
+    "lesion_dice": 0.6669,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d",
+    "fold": 1,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_isles22_fold1",
+    "lesion_dice": 0.6994,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d",
+    "fold": 2,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_isles22_fold2",
+    "lesion_dice": 0.6856,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d",
+    "fold": 3,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_isles22_fold3",
+    "lesion_dice": 0.6358,
+    "stderr_tail": ""
+  },
+  {
+    "arm": "smri_simclr3d",
+    "fold": 4,
+    "ok": true,
+    "rundir": "/fomo26/models/seg_simclr3d_isles22_fold4",
+    "lesion_dice": 0.7035,
+    "stderr_tail": ""
   }
 ]
