@@ -90,6 +90,18 @@ def run_one(arm: str, fold: int, debug: int = 0) -> dict:
             ckpt = "/tmp/fomo60k_seg.ckpt"
             convert_fomo60k_checkpoint(
                 "/fomo26/weights/fomo60k_pkoutsouvelis/combined_regular-step=200000.ckpt", ckpt)
+        elif arm == "smri_triad":
+            from asparagus_bridge.models_smri_triad import convert_triad_checkpoint
+            ckpt = "/tmp/triad_seg.ckpt"
+            convert_triad_checkpoint("/fomo26/weights/triad/Triad-SwinB-MAE.pth", ckpt)
+        elif arm == "smri_anatcl":
+            from asparagus_bridge.models_smri_anatcl import convert_anatcl_checkpoint
+            ckpt = "/tmp/anatcl_seg.ckpt"
+            convert_anatcl_checkpoint("/fomo26/weights/anatcl/anatcl_global_fold0.pth", ckpt)
+        elif arm == "smri_simclr3d":
+            from asparagus_bridge.models_smri_simclr3d import convert_simclr3d_checkpoint
+            ckpt = "/tmp/simclr3d_seg.ckpt"
+            convert_simclr3d_checkpoint("/fomo26/weights/simclr3d/simclr_3d_brain_foundation.tar", ckpt)
         elif arm == "scratch_nnunet":
             ckpt = None
         else:

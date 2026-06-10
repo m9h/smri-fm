@@ -99,3 +99,42 @@ def convert_triad_checkpoint(src_path, dst_path) -> None:
     epoch = ckpt.get("epoch") if isinstance(ckpt, dict) else None
     dst_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": state_dict, "epoch": epoch}, dst_path)
+
+
+from .seg_inference import SlidingWindowSegMixin  # noqa: E402
+
+
+class SmriTriadSegBackbone(SlidingWindowSegMixin, nn.Module):
+    """Triad SwinV2 encoder + MONAI SwinUNETR decoder (re-parented; see fomo60k seg)."""
+
+    stem_weight_name = "encoder.patch_embed.proj.weight"
+
+    def __init__(self, input_channels, output_channels, dimensions="3D",
+                 deep_supervision=False, **_ignored):
+        super().__init__()
+        assert dimensions == "3D", f"only 3D supported, got dimensions={dimensions}"
+        self.num_classes = output_channels
+        from monai.networks.nets import SwinUNETR
+        sw = SwinUNETR(
+            in_channels=input_channels, out_channels=output_channels,
+            feature_size=FEATURE_SIZE, depths=DEPTHS, num_heads=NUM_HEADS,
+            spatial_dims=3, use_v2=True, downsample="merging",
+        )
+        self.encoder = sw.swinViT
+        self.decoder = nn.ModuleDict({
+            "encoder1": sw.encoder1, "encoder2": sw.encoder2, "encoder3": sw.encoder3,
+            "encoder4": sw.encoder4, "encoder10": sw.encoder10,
+            "decoder5": sw.decoder5, "decoder4": sw.decoder4, "decoder3": sw.decoder3,
+            "decoder2": sw.decoder2, "decoder1": sw.decoder1, "out": sw.out,
+        })
+
+    def forward(self, x):
+        hs = self.encoder(x, normalize=True)
+        d = self.decoder
+        enc0 = d["encoder1"](x)
+        enc1 = d["encoder2"](hs[0]); enc2 = d["encoder3"](hs[1]); enc3 = d["encoder4"](hs[2])
+        dec4 = d["encoder10"](hs[4])
+        dec3 = d["decoder5"](dec4, hs[3]); dec2 = d["decoder4"](dec3, enc3)
+        dec1 = d["decoder3"](dec2, enc2); dec0 = d["decoder2"](dec1, enc1)
+        out = d["decoder1"](dec0, enc0)
+        return d["out"](out)

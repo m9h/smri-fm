@@ -182,3 +182,35 @@ def convert_anatcl_checkpoint(src_path, dst_path) -> None:
     epoch = ckpt.get("epoch") if isinstance(ckpt, dict) else None
     dst_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": state_dict, "epoch": epoch}, dst_path)
+
+
+from .seg_inference import SlidingWindowSegMixin  # noqa: E402
+from .seg_decoders import ResNetUNetDecoder  # noqa: E402
+
+
+class SmriAnatclSegBackbone(SlidingWindowSegMixin, nn.Module):
+    """AnatCL 3D-ResNet-18 encoder + ResNet-UNet decoder for asparagus seg.
+
+    self.encoder is the same _ResNet3D as the ClsReg wrapper, so the existing
+    convert_anatcl_checkpoint's `model.encoder.*` keys load straight in; the
+    fresh U-Net decoder lives under self.decoder (asparagus encoder/decoder split).
+    """
+
+    stem_weight_name = "encoder.conv1.weight"  # 1->n channel stem repeat
+
+    def __init__(self, input_channels, output_channels, dimensions="3D",
+                 deep_supervision=False, **_ignored):
+        super().__init__()
+        assert dimensions == "3D", f"only 3D supported, got dimensions={dimensions}"
+        self.num_classes = output_channels
+        self.encoder = _resnet18_3d(in_channels=input_channels)
+        self.decoder = ResNetUNetDecoder(output_channels)
+
+    def forward(self, x):
+        e = self.encoder
+        s0 = e.relu(e.bn1(e.conv1(x)))   # /2,  64
+        s1 = e.layer1(e.maxpool(s0))     # /4,  64
+        s2 = e.layer2(s1)                # /8,  128
+        s3 = e.layer3(s2)                # /16, 256
+        s4 = e.layer4(s3)                # /32, 512
+        return self.decoder([s0, s1, s2, s3, s4], x.shape[2:])
