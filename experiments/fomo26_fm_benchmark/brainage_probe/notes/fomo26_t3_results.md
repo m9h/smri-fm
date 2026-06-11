@@ -251,14 +251,49 @@ fomo60k **+0.033** (4/5) · triad **−0.018** (1/5) · simclr3d +0.012 (2/5) ·
 - **fomo60k transfers on both probes** (frozen brain-age champion + only positive
   decoder-controlled seg gain); **triad is the opposite** (SwinUNETR winner, frozen-mediocre,
   decoder-controlled-negative) → triad's strength was the encoder+decoder *pairing*.
-- *Caveat:* the uniform decoder is **lighter** than SwinUNETR (Swin Dice 0.75→0.59–0.64),
-  so it may under-exploit a strong encoder — a higher-capacity shared decoder is the
-  natural next test. The matched-arch FM-vs-scratch contrast is still clean.
+- *Caveat (now resolved below):* the light uniform decoder is lower-capacity than
+  SwinUNETR — tested next with a high-capacity shared body.
 
-→ **Bottom line (updated): the finetuned cross-arm seg ranking is mostly a *decoder*
-ranking; with the decoder held fixed, encoder pretraining buys ≤ +0.03 Dice and only for
-fomo60k.** The headline FM "wins" on ISLES22 come from the decoder you bolt on and from a
-weak baseline, not from the encoder.
+## SwinUNETR shared decoder — the gain VANISHES, a random encoder wins
+
+Re-ran the controlled experiment with a high-capacity shared body: the exact MONAI
+SwinUNETR decoder blocks held byte-identical (feature_size 48), fed each encoder's pyramid
+via 1×1 adapters (`SwinUnetrSharedDecoder`, `decoder_kind=swinunetr`). 4 FM + 2 random
+scratch × 5-fold (smoke 5/6→fix simclr3d octave-resize→6/6; real 30/30 OK, no OOM).
+Results: `results/isles22_seg_swinunetr_shared_decoder_5fold_modal.json`.
+
+| Arm | SwinUNETR body | Light body | Δ(decoder) |
+|---|---|---|---|
+| **scratch_swin (random)** | **0.767 ± 0.017** | 0.608 | +0.159 |
+| fomo60k | 0.761 ± 0.026 | 0.641 | +0.121 |
+| triad | 0.746 ± 0.022 | 0.590 | +0.156 |
+| anatcl | 0.738 ± 0.021 | 0.625 | +0.113 |
+| scratch_resnet (random) | 0.731 ± 0.026 | 0.620 | +0.110 |
+| simclr3d* | 0.659 ± 0.066 | 0.632 | +0.028* |
+
+Decoder-controlled gain (paired): fomo60k **+0.033→−0.006** · triad −0.018→−0.021 · anatcl
++0.004→+0.007 · simclr3d* +0.012→−0.071*.
+
+- **The decoder swap is worth +0.11–0.16 for EVERY arm (random-init included)** — ~4–5×
+  the largest encoder-pretraining effect ever measured (+0.033). The decoder dominates.
+- **With a capable decoder, encoder pretraining buys ≈0:** a *random-init* Swin (0.767) is
+  the **top arm**, tied with pretrained fomo60k (0.761). fomo60k's lone light-decoder gain
+  flips to −0.006. The +0.033 was the encoder compensating for a weak decoder, nothing more.
+- **Sanity check:** fomo60k on the shared SwinUNETR decoder (0.761) ≈ native SwinUNETR
+  (Part 2: 0.754) — apparatus reproduces the native pairing, so the result is real.
+- *simclr3d caveat:* MONAI-resnet pyramid off the canonical /2..32 octaves → required a
+  resize for the rigid SwinUNETR cats → its sunet cell is the one untrustworthy number;
+  anatcl is the clean ResNet arm.
+
+→ **Bottom line (final): the finetuned ISLES22 ranking is governed by the DECODER and the
+DATA BUDGET, not by whether the encoder was pretrained. At 200 cases with a capable
+decoder, a random-init encoder matches the best FM.** This doesn't mean pretraining is
+worthless — its value (if any) lives in the LOW-DATA regime a 200-case full finetune
+doesn't probe. Decisive next experiment: a label-budget sweep (5/10/20/50/200) — does the
+pretrained-vs-random gap that is ≈0 at 200 reopen few-shot? Echoes Pang et al. 2026
+(arXiv:2606.08164): on the same FOMO300K corpus they show preprocessing beyond minimum
+buys ≈0 for seg/age — same "the FM machinery matters less than you'd think" from the
+preprocessing axis; ours from the decoder axis.
 
 ## Infra (Modal port)
 

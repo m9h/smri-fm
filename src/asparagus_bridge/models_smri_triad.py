@@ -148,9 +148,10 @@ class SmriTriadUniformSegBackbone(UniformSegBackbone):
     stem_weight_name = "encoder.patch_embed.proj.weight"
     pyramid_channels = [FEATURE_SIZE, FEATURE_SIZE * 2, FEATURE_SIZE * 4, FEATURE_SIZE * 8, FEATURE_SIZE * 16]
 
-    def __init__(self, input_channels, output_channels, dimensions="3D", deep_supervision=False, **_ignored):
+    def __init__(self, input_channels, output_channels, dimensions="3D", deep_supervision=False,
+                 decoder_kind="resnet_unet", **_ignored):
         assert dimensions == "3D"
-        super().__init__(output_channels)
+        super().__init__(output_channels, decoder_kind=decoder_kind, input_channels=input_channels)
         self.encoder = _build_triad_encoder(in_channels=input_channels)
 
     def _pyramid(self, x):

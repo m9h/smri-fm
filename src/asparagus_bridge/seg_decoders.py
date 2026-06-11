@@ -80,19 +80,99 @@ class UniformUNetDecoder(nn.Module):
         return self.body(adapted, full_shape)
 
 
+# ---------------------------------------------------------------------------
+# Higher-capacity shared decoder: a byte-identical MONAI SwinUNETR decoder body
+# (the exact blocks that gave the Swin arms ~0.75 natively), fed ANY encoder's
+# 5-level pyramid through 1x1 channel adapters that map to [fs,2fs,4fs,8fs,16fs].
+# Tests the uniform-decoder caveat — does a decoder that *can* exploit a strong
+# encoder let the Swin/pretrained arms pull ahead, where the light U-Net body
+# equalized everything? The decoder blocks depend only on (feature_size,
+# in_channels), both fixed across arms -> body is identical; only adapters vary.
+# ---------------------------------------------------------------------------
+_SUNET_FS = 48  # SwinUNETR feature_size: target pyramid is [48,96,192,384,768]
+
+
+class SwinUnetrSharedDecoder(nn.Module):
+    def __init__(self, encoder_channels, out_channels: int, input_channels: int):
+        super().__init__()
+        assert len(encoder_channels) == 5
+        from monai.networks.nets import SwinUNETR
+
+        fs = _SUNET_FS
+        sw = SwinUNETR(
+            in_channels=input_channels, out_channels=out_channels, feature_size=fs,
+            depths=(2, 2, 6, 2), num_heads=(3, 6, 12, 24), spatial_dims=3,
+            use_v2=True, downsample="merging",
+        )
+        # keep only the decoder blocks; sw.swinViT (the encoder) is discarded — each
+        # arm brings its own encoder. naming under self.decoder.* keeps asparagus's
+        # encoder/decoder LR split keyed on the `model.decoder` prefix.
+        self.blocks = nn.ModuleDict({
+            "encoder1": sw.encoder1, "encoder2": sw.encoder2, "encoder3": sw.encoder3,
+            "encoder4": sw.encoder4, "encoder10": sw.encoder10,
+            "decoder5": sw.decoder5, "decoder4": sw.decoder4, "decoder3": sw.decoder3,
+            "decoder2": sw.decoder2, "decoder1": sw.decoder1, "out": sw.out,
+        })
+        target = [fs, 2 * fs, 4 * fs, 8 * fs, 16 * fs]
+        self.adapters = nn.ModuleList(
+            nn.Conv3d(ec, tc, kernel_size=1) for ec, tc in zip(encoder_channels, target)
+        )
+
+    def forward(self, pyramid, x_input, full_shape):
+        a = [ad(p) for ad, p in zip(self.adapters, pyramid)]  # -> [fs,2fs,4fs,8fs,16fs]
+        # MONAI's UnetrUpBlock cats are rigid (no interpolate), so the pyramid must sit
+        # at the canonical SwinUNETR scales /2,/4,/8,/16,/32. Some stems (e.g. MONAI
+        # resnet18) shift an octave; resize each level to its canonical fraction of the
+        # input. No-op for already-aligned encoders -> decoder stays identical across arms.
+        for i, s in enumerate((2, 4, 8, 16, 32)):
+            tgt = tuple(max(1, d // s) for d in full_shape)
+            if a[i].shape[2:] != tgt:
+                a[i] = F.interpolate(a[i], size=tgt, mode="trilinear", align_corners=False)
+        b = self.blocks
+        enc0 = b["encoder1"](x_input)            # full-res skip from the raw image
+        enc1 = b["encoder2"](a[0])
+        enc2 = b["encoder3"](a[1])
+        enc3 = b["encoder4"](a[2])
+        dec4 = b["encoder10"](a[4])
+        dec3 = b["decoder5"](dec4, a[3])
+        dec2 = b["decoder4"](dec3, enc3)
+        dec1 = b["decoder3"](dec2, enc2)
+        dec0 = b["decoder2"](dec1, enc1)
+        out = b["decoder1"](dec0, enc0)
+        logits = b["out"](out)
+        if logits.shape[2:] != full_shape:
+            logits = F.interpolate(logits, size=full_shape, mode="trilinear", align_corners=False)
+        return logits
+
+
 class UniformSegBackbone(SlidingWindowSegMixin, nn.Module):
-    """Generic FM-encoder + uniform decoder. Subclasses build self.encoder, set
-    pyramid_channels + stem_weight_name, and implement _pyramid(x)->[s0..s4]."""
+    """Generic FM-encoder + a shared decoder. Subclasses build self.encoder, set
+    pyramid_channels + stem_weight_name, and implement _pyramid(x)->[s0..s4].
+
+    decoder_kind selects the shared body: "resnet_unet" (light, default) or
+    "swinunetr" (high-capacity). Both are byte-identical across arms; only the 1x1
+    adapters differ. The swinunetr body also consumes the raw input for its full-res
+    skip, so forward passes x through."""
 
     pyramid_channels: list = []  # set by subclass
 
-    def __init__(self, output_channels: int):
+    def __init__(self, output_channels: int, decoder_kind: str = "resnet_unet",
+                 input_channels: int = 1):
         super().__init__()
         self.num_classes = output_channels
-        self.decoder = UniformUNetDecoder(self.pyramid_channels, output_channels)
+        self.decoder_kind = decoder_kind
+        if decoder_kind == "swinunetr":
+            self.decoder = SwinUnetrSharedDecoder(self.pyramid_channels, output_channels, input_channels)
+        elif decoder_kind == "resnet_unet":
+            self.decoder = UniformUNetDecoder(self.pyramid_channels, output_channels)
+        else:
+            raise ValueError(f"unknown decoder_kind {decoder_kind!r}")
 
     def _pyramid(self, x):  # -> [s0(/2), s1(/4), s2(/8), s3(/16), s4(/32)]
         raise NotImplementedError
 
     def forward(self, x):
-        return self.decoder(self._pyramid(x), x.shape[2:])
+        pyr = self._pyramid(x)
+        if self.decoder_kind == "swinunetr":
+            return self.decoder(pyr, x, x.shape[2:])
+        return self.decoder(pyr, x.shape[2:])

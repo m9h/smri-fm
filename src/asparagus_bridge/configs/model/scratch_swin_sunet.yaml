@@ -1,0 +1,21 @@
+# @package model
+# Scratch (random-init) Swin encoder + the SHARED shared SwinUNETR-class decoder body.
+# Same SwinTransformer arch as smri_fomo60k_useg / smri_triad_useg, but NO
+# pretrained checkpoint (modal_seg_sweep maps base=scratch_swin -> ckpt=None).
+# The decoder-controlled floor for the Swin FM arms: any FM-vs-this gap is the
+# encoder's *pretraining*, since encoder arch + decoder body are byte-identical.
+
+dimensions: 3D
+deep_supervision: False
+
+seg_net: scratch_swin
+
+_seg_net:
+  _target_: asparagus_bridge.models_smri_fomo60k.SmriFomo60kUniformSegBackbone
+  dimensions: ${model.dimensions}
+  deep_supervision: ${model.deep_supervision}
+  decoder_kind: swinunetr
+
+finetune_optim: AdamW
+finetune_lr: 1e-4
+weight_decay: 3e-5

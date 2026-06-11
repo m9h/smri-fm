@@ -76,9 +76,14 @@ def run_one(arm: str, fold: int, debug: int = 0) -> dict:
         os.makedirs(env[k], exist_ok=True)
 
     # checkpoint conversion (scratch = random init, no ckpt).
-    # `_useg` arms reuse the BASE arm's converter (same encoder) with the uniform-decoder
-    # +model config; scratch_*_useg = random encoder + uniform decoder (ckpt=None).
-    base = arm[: -len("_useg")] if arm.endswith("_useg") else arm
+    # `_useg`/`_sunet` arms reuse the BASE arm's converter (same encoder) with a
+    # shared-decoder +model config (uniform light U-Net or SwinUNETR-class body);
+    # scratch_*_{useg,sunet} = random encoder + shared decoder (ckpt=None).
+    base = arm
+    for _suf in ("_useg", "_sunet"):
+        if arm.endswith(_suf):
+            base = arm[: -len(_suf)]
+            break
     ckpt = None
     try:
         if base in ("scratch_resnet", "scratch_swin"):

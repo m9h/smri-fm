@@ -120,9 +120,10 @@ class SmriSimclr3dUniformSegBackbone(UniformSegBackbone):
     stem_weight_name = "encoder.conv1.weight"
     pyramid_channels = [64, 64, 128, 256, 512]
 
-    def __init__(self, input_channels, output_channels, dimensions="3D", deep_supervision=False, **_ignored):
+    def __init__(self, input_channels, output_channels, dimensions="3D", deep_supervision=False,
+                 decoder_kind="resnet_unet", **_ignored):
         assert dimensions == "3D"
-        super().__init__(output_channels)
+        super().__init__(output_channels, decoder_kind=decoder_kind, input_channels=input_channels)
         self.encoder = _build_simclr3d_encoder(in_channels=input_channels)
 
     def _pyramid(self, x):
